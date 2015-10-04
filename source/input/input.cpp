@@ -24,15 +24,24 @@
 #include "input.h"
 #include "yuv.h"
 #include "y4m.h"
+#ifdef ENABLE_LAVF
+    #include "lavf.h"
+#endif
 
 using namespace X265_NS;
 
-InputFile* InputFile::open(InputFileInfo& info, bool bForceY4m, bool alpha, int format)
+InputFile* InputFile::open(InputFileInfo& info, bool bForceY4m)
 {
     const char * s = strrchr(info.filename, '.');
 
     if (bForceY4m || (s && !strcmp(s, ".y4m")))
-        return new Y4MInput(info, alpha, format);
-    else
-        return new YUVInput(info, alpha, format);
+        return new Y4MInput(info);
+#ifdef ENABLE_LAVF
+    if (s &&
+        ( !strcmp(s, ".mp4")
+        ||!strcmp(s, ".mkv")
+        ))
+        return new LavfInput(info);
+#endif
+    return new YUVInput(info);
 }
