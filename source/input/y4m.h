@@ -55,7 +55,7 @@ protected:
 
     int colorSpace;
 
-    bool alphaAvailable;
+    int frameCount;
 
     bool threadActive;
 
@@ -71,7 +71,7 @@ protected:
 
 public:
 
-    Y4MInput(InputFileInfo& info, bool alpha, int format);
+    Y4MInput(InputFileInfo& info);
 
     virtual ~Y4MInput();
     void release();
@@ -85,6 +85,9 @@ public:
     int getWidth() const                          { return width; }
 
     int getHeight() const                         { return height; }
+
+    template <typename T>
+    int readNumber(T &out);
 };
 }
 
