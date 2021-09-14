@@ -27,6 +27,12 @@ jobs:
         path: ffmpeg
         repository: FFmpeg/FFmpeg
         ref: n4.4
+    - name: Checkout mimalloc
+      uses: actions/checkout@v2
+      with:
+        path: mimalloc
+        repository: microsoft/mimalloc
+        ref: v2.0.2
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
@@ -45,17 +51,23 @@ jobs:
         make install
         echo PKG_CONFIG_PATH=/usr/local/lib/pkgconfig >> $GITHUB_ENV
       working-directory: ffmpeg
+    - name: Compile mimalloc
+      run:
+        cmake -GNinja .. -DCMAKE_INSTALL_PREFIX=/usr/local
+        ninja
+        ninja install
+      working-directory: mimalloc
     - name: Setup build dir
       run: mkdir -p build/8b build/10b
     - name: Compile x265 8bit
       run: |
-        cmake -GNinja ../../x265/source -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF -DTARGET_CPU=${{matrix.target_cpu}}
+        cmake -GNinja ../../x265/source -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF -DTARGET_CPU=${{matrix.target_cpu}} -DUSE_MIMALLOC=ON
         ninja
         cp libx265.a ../10b/libx265_8b.a
       working-directory: build/8b
     - name: Compile x265 10bit
       run: |
-        cmake -GNinja ../../x265/source -DEXTRA_LIB=x265_8b.a -DEXTRA_LINK_FLAGS=-L. -DENABLE_AVISYNTH=OFF -DENABLE_VPYSYNTH=OFF -DLINKED_8BIT=ON -DHIGH_BIT_DEPTH=ON -DENABLE_SHARED=OFF -DENABLE_LAVF=ON -DENABLE_STATIC_LAVF=ON -DTARGET_CPU=${{matrix.target_cpu}} -DCMAKE_CXX_FLAGS=-I../../FFmpeg
+        cmake -GNinja ../../x265/source -DEXTRA_LIB=x265_8b.a -DEXTRA_LINK_FLAGS=-L. -DENABLE_AVISYNTH=OFF -DENABLE_VPYSYNTH=OFF -DLINKED_8BIT=ON -DHIGH_BIT_DEPTH=ON -DENABLE_SHARED=OFF -DENABLE_LAVF=ON -DENABLE_STATIC_LAVF=ON -DTARGET_CPU=${{matrix.target_cpu}} -DCMAKE_CXX_FLAGS=-I../../FFmpeg -DUSE_MIMALLOC=ON
         ninja
         strip -s x265.exe
       working-directory: build/10b
