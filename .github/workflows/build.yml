@@ -1,0 +1,64 @@
+name: Build
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - name: Checkout x265
+      uses: actions/checkout@v2
+      with:
+        path: x265
+        fetch-depth: 0
+    - name: Checkout FFmpeg
+      uses: actions/checkout@v2
+      with:
+        path: ffmpeg
+        repository: FFmpeg/FFmpeg
+        ref: n4.4
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: CLANG64
+        update: true
+        install: >-
+          base-devel
+          nasm
+          mingw-w64-clang-x86_64-toolchain
+          mingw-w64-clang-x86_64-cmake
+          mingw-w64-clang-x86_64-ninja
+    - name: Compile FFmpeg
+      run: |
+        ./configure --enable-gpl --enable-version3 --disable-runtime-cpudetect --disable-all --disable-autodetect --enable-avformat --enable-avcodec --enable-avformat --disable-everything --disable-network --enable-demuxer=mpegts,mov,matroska,h264,hevc --enable-decoder=h264,hevc,ffv1,ffvhuff,huffyuv --cc=clang --cxx=clang++ --cpu=skylake
+        make -j`nproc`
+        make install
+        echo PKG_CONFIG_PATH=/usr/local/lib/pkgconfig >> $GITHUB_ENV
+      working-directory: ffmpeg
+    - name: Setup build dir
+      run: mkdir -p build/8b build/10b
+    - name: Compile x265 8bit
+      run: |
+        cmake -GNinja ../../x265/source -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF -DTARGET_CPU=skylake
+        ninja
+        cp libx265.a ../10b/libx265_8b.a
+      working-directory: build/8b
+    - name: Compile x265 10bit
+      run: |
+        cmake -GNinja ../../x265/source -DEXTRA_LIB=x265_8b.a -DEXTRA_LINK_FLAGS=-L. -DENABLE_AVISYNTH=OFF -DENABLE_VPYSYNTH=OFF -DLINKED_8BIT=ON -DHIGH_BIT_DEPTH=ON -DENABLE_SHARED=OFF -DENABLE_LAVF=ON -DENABLE_STATIC_LAVF=ON -DTARGET_CPU=skylake -DCMAKE_CXX_FLAGS=-I../../FFmpeg
+        ninja
+        strip -s x265.exe
+      working-directory: build/10b
+    - name: Package
+      run: |
+        mkdir dist
+        cp /clang64/bin/libc++.dll /clang64/bin/libunwind.dll dist
+        cp build/10b/x265.exe dist
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: x265-win64
+        path: dist/*
