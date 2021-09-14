@@ -8,6 +8,13 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
+    strategy:
+      matrix:
+        target_cpu:
+        - broadwell
+        - skylake
+        - znver2
+        - znver3
     steps:
     - name: Checkout x265
       uses: actions/checkout@v2
@@ -33,7 +40,7 @@ jobs:
           mingw-w64-clang-x86_64-ninja
     - name: Compile FFmpeg
       run: |
-        ./configure --enable-gpl --enable-version3 --disable-runtime-cpudetect --disable-all --disable-autodetect --enable-avformat --enable-avcodec --enable-avformat --disable-everything --disable-network --enable-demuxer=mpegts,mov,matroska,h264,hevc --enable-decoder=h264,hevc,ffv1,ffvhuff,huffyuv --cc=clang --cxx=clang++ --cpu=skylake
+        ./configure --enable-gpl --enable-version3 --disable-runtime-cpudetect --disable-all --disable-autodetect --enable-avformat --enable-avcodec --enable-avformat --disable-everything --disable-network --enable-demuxer=mpegts,mov,matroska,h264,hevc --enable-decoder=h264,hevc,ffv1,ffvhuff,huffyuv --cc=clang --cxx=clang++ --cpu=${{matrix.target_cpu}}
         make -j`nproc`
         make install
         echo PKG_CONFIG_PATH=/usr/local/lib/pkgconfig >> $GITHUB_ENV
@@ -42,13 +49,13 @@ jobs:
       run: mkdir -p build/8b build/10b
     - name: Compile x265 8bit
       run: |
-        cmake -GNinja ../../x265/source -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF -DTARGET_CPU=skylake
+        cmake -GNinja ../../x265/source -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF -DTARGET_CPU=${{matrix.target_cpu}}
         ninja
         cp libx265.a ../10b/libx265_8b.a
       working-directory: build/8b
     - name: Compile x265 10bit
       run: |
-        cmake -GNinja ../../x265/source -DEXTRA_LIB=x265_8b.a -DEXTRA_LINK_FLAGS=-L. -DENABLE_AVISYNTH=OFF -DENABLE_VPYSYNTH=OFF -DLINKED_8BIT=ON -DHIGH_BIT_DEPTH=ON -DENABLE_SHARED=OFF -DENABLE_LAVF=ON -DENABLE_STATIC_LAVF=ON -DTARGET_CPU=skylake -DCMAKE_CXX_FLAGS=-I../../FFmpeg
+        cmake -GNinja ../../x265/source -DEXTRA_LIB=x265_8b.a -DEXTRA_LINK_FLAGS=-L. -DENABLE_AVISYNTH=OFF -DENABLE_VPYSYNTH=OFF -DLINKED_8BIT=ON -DHIGH_BIT_DEPTH=ON -DENABLE_SHARED=OFF -DENABLE_LAVF=ON -DENABLE_STATIC_LAVF=ON -DTARGET_CPU=${{matrix.target_cpu}} -DCMAKE_CXX_FLAGS=-I../../FFmpeg
         ninja
         strip -s x265.exe
       working-directory: build/10b
@@ -60,5 +67,5 @@ jobs:
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
-        name: x265-win64
+        name: x265-win64-${{matrix.target_cpu}}
         path: dist/*
