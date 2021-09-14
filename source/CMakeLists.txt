@@ -599,7 +599,7 @@ if(USE_MIMALLOC)
     find_package(mimalloc REQUIRED)
     add_definitions(-DUSE_MIMALLOC)
     list(APPEND PLATFORM_LIBS mimalloc-static)
-    include_directories(${MIMALLOC_INCLUDE_DIRECTORIES})
+    include_directories(${MIMALLOC_INCLUDE_DIR})
 endif()
 configure_file("${PROJECT_SOURCE_DIR}/x265_config.h.in"
                "${PROJECT_BINARY_DIR}/x265_config.h")
