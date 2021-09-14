@@ -46,7 +46,7 @@ jobs:
           mingw-w64-clang-x86_64-ninja
     - name: Compile FFmpeg
       run: |
-        ./configure --enable-gpl --enable-version3 --disable-runtime-cpudetect --disable-all --disable-autodetect --enable-avformat --enable-avcodec --enable-avformat --disable-everything --disable-network --enable-demuxer=mpegts,mov,matroska,h264,hevc --enable-decoder=h264,hevc,ffv1,ffvhuff,huffyuv --cc=clang --cxx=clang++ --cpu=${{matrix.target_cpu}}
+        ./configure --enable-gpl --enable-version3 --disable-runtime-cpudetect --disable-all --disable-autodetect --enable-avformat --enable-avcodec --enable-avformat --disable-everything --disable-network --enable-demuxer=mpegts,mov,matroska,h264,hevc --enable-decoder=h264,hevc,ffv1,ffvhuff,huffyuv --enable-protocol=file,pipe --cc=clang --cxx=clang++ --cpu=${{matrix.target_cpu}}
         make -j`nproc`
         make install
       working-directory: ffmpeg
