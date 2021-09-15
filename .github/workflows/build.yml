@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         target_cpu:
-        - broadwell
+        - haswell
         - skylake
         - znver2
         - znver3
