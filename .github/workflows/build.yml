@@ -69,12 +69,17 @@ jobs:
     - name: Compile x265 10bit
       run: |
         export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-        cmake -GNinja ../../x265/source -DEXTRA_LIB=x265_8b.a -DEXTRA_LINK_FLAGS=-L. -DENABLE_AVISYNTH=OFF -DENABLE_VPYSYNTH=OFF -DLINKED_8BIT=ON -DHIGH_BIT_DEPTH=ON -DENABLE_SHARED=OFF -DENABLE_LAVF=ON -DENABLE_STATIC_LAVF=ON -DTARGET_CPU=${{matrix.target_cpu}} -DUSE_MIMALLOC=ON -DCMAKE_CXX_FLAGS=-I../../FFmpeg '-DCMAKE_EXE_LINKER_FLAGS=-LD:/a/_temp/msys/msys64/usr/local/lib -static-libstdc++ -static-libgcc -unwindlib=libunwind'
+        cmake -GNinja ../../x265/source -DEXTRA_LIB=x265_8b.a -DEXTRA_LINK_FLAGS=-L. -DENABLE_AVISYNTH=OFF -DENABLE_VPYSYNTH=OFF -DLINKED_8BIT=ON -DHIGH_BIT_DEPTH=ON -DENABLE_SHARED=OFF -DENABLE_LAVF=ON -DENABLE_STATIC_LAVF=ON -DTARGET_CPU=${{matrix.target_cpu}} -DUSE_MIMALLOC=ON -DCMAKE_CXX_FLAGS=-I../../FFmpeg -DCMAKE_EXE_LINKER_FLAGS=-LD:/a/_temp/msys/msys64/usr/local/lib
         ninja
         strip -s x265.exe
       working-directory: build/10b
+    - name: Package
+      run: |
+        mkdir dist
+        cp /clang64/bin/libc++.dll /clang64/bin/libunwind.dll dist
+        cp build/10b/x265.exe dist
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
         name: x265-win64-${{matrix.target_cpu}}
-        path: build/10b/x265.exe
+        path: dist/*
