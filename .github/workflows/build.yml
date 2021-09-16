@@ -26,7 +26,7 @@ jobs:
           echo "DLL_DEPS=/clang64/bin/libc++.dll /clang64/bin/libunwind.dll" >> $env:GITHUB_ENV
         } else {
           echo "MSYSTEM=UCRT64" >> $env:GITHUB_ENV
-          echo "DLL_DEPS=/ucrt64/bin/libstdc++-6.dll /ucrt64/bin/libgcc_s_seh-1.dll" >> $env:GITHUB_ENV
+          echo "DLL_DEPS=/ucrt64/bin/libstdc++-6.dll /ucrt64/bin/libgcc_s_seh-1.dll /ucrt64/bin/libwinpthread-1.dll" >> $env:GITHUB_ENV
         }
       shell: pwsh
     - name: Checkout x265
@@ -94,5 +94,5 @@ jobs:
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
-        name: x265-win64-${{matrix.target_cpu}}
+        name: x265-win64-${{matrix.target_cpu}}-${{matrix.toolchain}}
         path: dist/*
