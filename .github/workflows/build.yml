@@ -34,18 +34,32 @@ jobs:
       with:
         path: x265
         fetch-depth: 0
+    - name: Cache FFmpeg
+      id: cache-ff
+      uses: actions/cache@v2
+      with:
+        path: ffmpeg
+        key: ${{matrix.target_cpu}}-${{matrix.toolchain}}-ff
     - name: Checkout FFmpeg
       uses: actions/checkout@v2
       with:
         path: ffmpeg
         repository: FFmpeg/FFmpeg
         ref: n4.4
+      if: steps.cache-ff.outputs.cache-hit != 'true'
+    - name: Cache mimalloc
+      id: cache-mi
+      uses: actions/cache@v2
+      with:
+        path: mimalloc
+        key: ${{matrix.target_cpu}}-${{matrix.toolchain}}-mi
     - name: Checkout mimalloc
       uses: actions/checkout@v2
       with:
         path: mimalloc
         repository: microsoft/mimalloc
         ref: v2.0.2
+      if: steps.cache-mi.outputs.cache-hit != 'true'
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
@@ -61,7 +75,10 @@ jobs:
       run: |
         ./configure --enable-gpl --enable-version3 --disable-runtime-cpudetect --disable-all --disable-autodetect --enable-avformat --enable-avcodec --enable-avformat --disable-everything --disable-network --enable-demuxer=mpegts,mov,matroska,h264,hevc --enable-decoder=h264,hevc,ffv1,ffvhuff,huffyuv --enable-protocol=file,pipe --cc=cc --cxx=c++ --cpu=${{matrix.target_cpu}}
         make -j`nproc`
-        make install
+      working-directory: ffmpeg
+      if: steps.cache-ff.outputs.cache-hit != 'true'
+    - name: Install FFmpeg
+      run: make install
       working-directory: ffmpeg
     - name: Compile mimalloc
       run: |
@@ -69,8 +86,11 @@ jobs:
         cd build
         cmake -GNinja .. -DCMAKE_INSTALL_PREFIX=/usr/local
         ninja
-        ninja install
       working-directory: mimalloc
+      if: steps.cache-mi.outputs.cache-hit != 'true'
+    - name: Install mimalloc
+      run: ninja install
+      working-directory: mimalloc/build
     - name: Setup build dir
       run: mkdir -p build/8b build/10b
     - name: Compile x265 8bit
