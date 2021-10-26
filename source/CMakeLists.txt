@@ -600,7 +600,7 @@ endif(DETAILED_CU_STATS)
 if(USE_MIMALLOC)
     find_package(mimalloc REQUIRED)
     add_definitions(-DUSE_MIMALLOC)
-    list(APPEND PLATFORM_LIBS mimalloc-static)
+    list(APPEND PLATFORM_LIBS "-L${MIMALLOC_LIBRARY_DIR}" -lmimalloc-static)
     include_directories(${MIMALLOC_INCLUDE_DIR})
 endif()
 configure_file("${PROJECT_SOURCE_DIR}/x265_config.h.in"
