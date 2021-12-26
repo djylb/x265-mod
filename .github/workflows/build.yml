@@ -77,6 +77,8 @@ jobs:
         make -j`nproc`
       working-directory: ffmpeg
       if: steps.cache-ff.outputs.cache-hit != 'true'
+    - name: Get rid of .dll.a
+      run: find /*64/ /usr/ -type f -name "*.dll.a" -print -delete
     - name: Install FFmpeg
       run: make install
       working-directory: ffmpeg
@@ -93,8 +95,6 @@ jobs:
       working-directory: mimalloc/build
     - name: Setup build dir
       run: mkdir -p build/8b build/10b
-    - name: Get rid of .dll.a
-      run: find /*64/ /usr/ -type f -name "*.dll.a" -print -delete
     - name: Download profdata
       run: iwr https://github.com/${{github.repository}}/raw/profdata/x265.profdata -OutFile x265.profdata
       shell: pwsh
