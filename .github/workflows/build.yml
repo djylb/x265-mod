@@ -1,6 +1,12 @@
 name: Build
 
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'which tag to upload to'
+        default: ''
 
 jobs:
   build:
@@ -66,6 +72,7 @@ jobs:
         msystem: ${{env.MSYSTEM}}
         update: true
         install: >-
+          p7zip
           base-devel
           mingw-w64-${{matrix.toolchain}}-x86_64-nasm
           mingw-w64-${{matrix.toolchain}}-x86_64-toolchain
@@ -121,3 +128,19 @@ jobs:
       with:
         name: x265-win64-${{matrix.target_cpu}}-${{matrix.toolchain}}
         path: dist/*
+
+    - name: Compress artifact for release
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.tag != ''
+      run: |
+        cd dist
+        7za a -t7z -mx=7 ../x265-win64-${{matrix.target_cpu}}-${{matrix.toolchain}}.${{ github.event.inputs.tag }}.7z .
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.tag != ''
+      with:
+        tag_name: ${{ github.event.inputs.tag }}
+        files: x265-win64-${{matrix.target_cpu}}-${{matrix.toolchain}}.${{ github.event.inputs.tag }}.7z
+        fail_on_unmatched_files: true
+        generate_release_notes: false
+        prerelease: true
