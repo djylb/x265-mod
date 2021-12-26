@@ -122,7 +122,7 @@ jobs:
         if [ -z "${{ github.event.inputs.profile }}" ]; then
           extra_cflags="-fprofile-instr-use=${{github.workspace}}/x265.profdata"
         else
-          extra_cflags="-fprofile-instr-generate"
+          extra_cflags="-fprofile-instr-generate -fprofile-update=atomic"
         fi
         cmake -GNinja ../../x265/source -DEXTRA_LIB=x265_8b.a -DEXTRA_LINK_FLAGS=-L. -DLINKED_8BIT=ON -DENABLE_AVISYNTH=OFF -DENABLE_VPYSYNTH=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_SHARED=OFF -DENABLE_LAVF=ON -DENABLE_STATIC_LAVF=ON -DTARGET_CPU=${{matrix.target_cpu}} -DUSE_MIMALLOC=ON -DUSE_LTO=ON "-DCMAKE_CXX_FLAGS=-I../../FFmpeg $extra_cflags" -DCMAKE_EXE_LINKER_FLAGS=-LD:/a/_temp/msys/msys64/usr/local/lib -DCMAKE_ASM_NASM_FLAGS=-w-macro-params-legacy
         ninja
