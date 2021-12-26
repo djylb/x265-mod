@@ -52,13 +52,13 @@ jobs:
       uses: actions/cache@v2
       with:
         path: mimalloc
-        key: ${{matrix.target_cpu}}-${{matrix.toolchain}}-mi
+        key: ${{matrix.target_cpu}}-${{matrix.toolchain}}-mi-v2
     - name: Checkout mimalloc
       uses: actions/checkout@v2
       with:
         path: mimalloc
-        repository: microsoft/mimalloc
-        ref: v2.0.2
+        repository: AmusementClub/mimalloc
+        ref: v2.0.2-AC
       if: steps.cache-mi.outputs.cache-hit != 'true'
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
