@@ -20,8 +20,13 @@ jobs:
     strategy:
       matrix:
         target_cpu:
+        - generic
+        - ivybridge
         - haswell
         - skylake
+        - alderlake
+        - bdver4
+        - znver1
         - znver2
         - znver3
         toolchain:
