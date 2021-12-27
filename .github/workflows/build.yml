@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         target_cpu:
-        - generic
+        - x86-64
         - ivybridge
         - haswell
         - skylake
