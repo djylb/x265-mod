@@ -5,7 +5,7 @@ find_package(Git)
 set(MOD_BUILD Yuuki)
 
 execute_process(COMMAND
-    ${GIT_EXECUTABLE} describe --tags --first-parent HEAD
+    ${GIT_EXECUTABLE} describe --tags --first-parent --match=[0-9].[0-9]* HEAD
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         OUTPUT_VARIABLE X265_HEAD_TAG
         ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -24,7 +24,6 @@ execute_process(COMMAND
         ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-string(REGEX REPLACE "(${MOD_BUILD}-)?([0-9.]+)(-AC[0-9.a-z]*)?" "\\2" X265_HEAD_TAG ${X265_HEAD_TAG})
 string(REPLACE "-" ";" X265_HEAD_TAG_ARR ${X265_HEAD_TAG})
 string(REPLACE "-" ";" X265_BASE_TAG_ARR ${X265_BASE_TAG})
 list(GET X265_HEAD_TAG_ARR 0 X265_ORIG_TAG)
