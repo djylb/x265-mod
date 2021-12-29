@@ -7,9 +7,6 @@ on:
       tag:
         description: 'which tag to upload to'
         default: ''
-      profile:
-        description: 'whether to generate profile version'
-        default: ''
 
 jobs:
   build:
@@ -125,32 +122,38 @@ jobs:
         cp libx265.a ../10b/libx265_12b.a
       working-directory: build/12b
     - name: Compile x265 10bit (with PGO)
-      working-directory: build/10b
+      working-directory: build
       run: |
+        cp -a 10b 10bprof
         export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-        if [ -z "${{ github.event.inputs.profile }}" ]; then
-          extra_cflags="-fprofile-instr-use=${{github.workspace}}/x265.profdata"
-        else
-          extra_cflags="-fprofile-instr-generate -fprofile-update=atomic"
-        fi
-        cmake -GNinja ../../x265/source -DEXTRA_LIB="x265_8b.a;x265_12b.a" -DEXTRA_LINK_FLAGS=-L. -DLINKED_8BIT=ON -DLINKED_12BIT=ON -DENABLE_HDR10_PLUS=ON -DENABLE_AVISYNTH=OFF -DENABLE_VPYSYNTH=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_SHARED=OFF -DENABLE_LAVF=ON -DENABLE_STATIC_LAVF=ON -DTARGET_CPU=${{matrix.target_cpu}} -DUSE_MIMALLOC=ON -DUSE_LTO=ON "-DCMAKE_CXX_FLAGS=-I../../FFmpeg $extra_cflags" -DCMAKE_EXE_LINKER_FLAGS=-LD:/a/_temp/msys/msys64/usr/local/lib -DCMAKE_ASM_NASM_FLAGS=-w-macro-params-legacy
+        cmake_flags="-GNinja ../../x265/source -DEXTRA_LIB=x265_8b.a;x265_12b.a -DEXTRA_LINK_FLAGS=-L. -DLINKED_8BIT=ON -DLINKED_12BIT=ON -DENABLE_HDR10_PLUS=ON -DENABLE_AVISYNTH=OFF -DENABLE_VPYSYNTH=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_SHARED=OFF -DENABLE_LAVF=ON -DENABLE_STATIC_LAVF=ON -DTARGET_CPU=${{matrix.target_cpu}} -DUSE_MIMALLOC=ON -DUSE_LTO=ON -DCMAKE_EXE_LINKER_FLAGS=-LD:/a/_temp/msys/msys64/usr/local/lib -DCMAKE_ASM_NASM_FLAGS=-w-macro-params-legacy"
+        pushd 10b
+        cmake $cmake_flags "-DCMAKE_CXX_FLAGS=-I../../FFmpeg -fprofile-instr-use=${{github.workspace}}/x265.profdata"
         ninja
         strip -s x265.exe
+        popd
+        pushd 10bprof
+        cmake $cmake_flags "-DCMAKE_CXX_FLAGS=-I../../FFmpeg -fprofile-instr-generate -fprofile-update=atomic"
+        ninja
+        strip -s x265.exe
+        mv x265.exe x265-profiling.exe
+        popd
     - name: Package
       run: |
         mkdir dist
-        cp ${{env.DLL_DEPS}} build/10b/x265.exe dist
+        cp ${{env.DLL_DEPS}} build/10b*/x265*.exe dist
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
-        name: x265-win64-${{matrix.target_cpu}}-${{matrix.toolchain}}-${{ github.event.inputs.profile }}
+        name: x265-win64-${{matrix.target_cpu}}-${{matrix.toolchain}}-full
         path: dist/*
 
     - name: Compress artifact for release
       if: github.event_name == 'workflow_dispatch' && github.event.inputs.tag != ''
       run: |
         cd dist
-        7za a -t7z -mx=7 ../x265-win64-${{matrix.target_cpu}}-${{matrix.toolchain}}.${{ github.event.inputs.tag }}.7z .
+        # do not release profiling binary
+        7za a -t7z -mx=7 ../x265-win64-${{matrix.target_cpu}}-${{matrix.toolchain}}.${{ github.event.inputs.tag }}.7z x265.exe
 
     - name: Release
       uses: softprops/action-gh-release@v1
