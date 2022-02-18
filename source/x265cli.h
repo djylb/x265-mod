@@ -141,7 +141,6 @@ static const struct option long_options[] =
     { "no-fast-intra",        no_argument, NULL, 0 },
     { "no-open-gop",          no_argument, NULL, 0 },
     { "open-gop",             no_argument, NULL, 0 },
-    { "cra-nal",              no_argument, NULL, 0 },
     { "keyint",         required_argument, NULL, 'I' },
     { "min-keyint",     required_argument, NULL, 'i' },
     { "gop-lookahead",  required_argument, NULL, 0 },
@@ -150,6 +149,7 @@ static const struct option long_options[] =
     { "scenecut-bias",  required_argument, NULL, 0 },
     { "hist-scenecut",        no_argument, NULL, 0},
     { "no-hist-scenecut",     no_argument, NULL, 0},
+    { "hist-threshold", required_argument, NULL, 0},
     { "fades",                no_argument, NULL, 0 },
     { "no-fades",             no_argument, NULL, 0 },
     { "scenecut-aware-qp", required_argument, NULL, 0 },
@@ -188,8 +188,7 @@ static const struct option long_options[] =
     { "qp",             required_argument, NULL, 'q' },
     { "aq-mode",        required_argument, NULL, 0 },
     { "aq-strength",    required_argument, NULL, 0 },
-    { "sbrc",                 no_argument, NULL, 0 },
-    { "no-sbrc",              no_argument, NULL, 0 },
+    { "aq-bias-strength", required_argument, NULL, 0 },
     { "rc-grain",             no_argument, NULL, 0 },
     { "no-rc-grain",          no_argument, NULL, 0 },
     { "ipratio",        required_argument, NULL, 0 },
@@ -252,7 +251,6 @@ static const struct option long_options[] =
     { "crop-rect",      required_argument, NULL, 0 }, /* DEPRECATED */
     { "master-display", required_argument, NULL, 0 },
     { "max-cll",        required_argument, NULL, 0 },
-    {"video-signal-type-preset", required_argument, NULL, 0 },
     { "min-luma",       required_argument, NULL, 0 },
     { "max-luma",       required_argument, NULL, 0 },
     { "log2-max-poc-lsb", required_argument, NULL, 8 },
@@ -272,17 +270,12 @@ static const struct option long_options[] =
     { "repeat-headers",       no_argument, NULL, 0 },
     { "aud",                  no_argument, NULL, 0 },
     { "no-aud",               no_argument, NULL, 0 },
-    { "eob",                  no_argument, NULL, 0 },
-    { "no-eob",               no_argument, NULL, 0 },
-    { "eos",                  no_argument, NULL, 0 },
-    { "no-eos",               no_argument, NULL, 0 },
     { "info",                 no_argument, NULL, 0 },
     { "no-info",              no_argument, NULL, 0 },
     { "opts",           required_argument, NULL, 0 },
     { "zones",          required_argument, NULL, 0 },
     { "qpfile",         required_argument, NULL, 0 },
     { "zonefile",       required_argument, NULL, 0 },
-    { "no-zonefile-rc-init",  no_argument, NULL, 0 },
     { "lambda-file",    required_argument, NULL, 0 },
     { "b-intra",              no_argument, NULL, 0 },
     { "no-b-intra",           no_argument, NULL, 0 },
@@ -313,7 +306,8 @@ static const struct option long_options[] =
     { "dynamic-refine",       no_argument, NULL, 0 },
     { "no-dynamic-refine",    no_argument, NULL, 0 },
     { "strict-cbr",           no_argument, NULL, 0 },
-    { "temporal-layers",      required_argument, NULL, 0 },
+    { "temporal-layers",      no_argument, NULL, 0 },
+    { "no-temporal-layers",   no_argument, NULL, 0 },
     { "qg-size",        required_argument, NULL, 0 },
     { "recon-y4m-exec", required_argument, NULL, 0 },
     { "analyze-src-pics", no_argument, NULL, 0 },
@@ -363,19 +357,6 @@ static const struct option long_options[] =
     { "frame-dup",            no_argument, NULL, 0 },
     { "no-frame-dup", no_argument, NULL, 0 },
     { "dup-threshold", required_argument, NULL, 0 },
-    { "mcstf",                 no_argument, NULL, 0 },
-    { "no-mcstf",              no_argument, NULL, 0 },
-#if ENABLE_ALPHA
-    { "alpha",                 no_argument, NULL, 0 },
-#endif
-#if ENABLE_MULTIVIEW
-    { "num-views", required_argument, NULL, 0 },
-    { "multiview-config", required_argument, NULL, 0 },
-    { "format", required_argument, NULL, 0 },
-#endif
-#if ENABLE_SCC_EXT
-    { "scc",        required_argument, NULL, 0 },
-#endif
 #ifdef SVT_HEVC
     { "svt",     no_argument, NULL, 0 },
     { "no-svt",  no_argument, NULL, 0 },
@@ -400,11 +381,6 @@ static const struct option long_options[] =
     { "abr-ladder", required_argument, NULL, 0 },
     { "min-vbv-fullness", required_argument, NULL, 0 },
     { "max-vbv-fullness", required_argument, NULL, 0 },
-    { "scenecut-qp-config", required_argument, NULL, 0 },
-    { "film-grain", required_argument, NULL, 0 },
-    { "aom-film-grain", required_argument, NULL, 0 },
-    { "frame-rc",no_argument, NULL, 0 },
-    { "no-frame-rc",no_argument, NULL, 0 },
     { 0, 0, 0, 0 },
     { 0, 0, 0, 0 },
     { 0, 0, 0, 0 },
@@ -414,16 +390,12 @@ static const struct option long_options[] =
 
     struct CLIOptions
     {
-        InputFile* input[MAX_VIEWS];
-        ReconFile* recon[MAX_LAYERS];
+        InputFile* input;
+        ReconFile* recon;
         OutputFile* output;
         FILE*       qpfile;
         FILE*       zoneFile;
         FILE*    dolbyVisionRpu;    /* File containing Dolby Vision BL RPU metadata */
-        FILE*    scenecutAwareQpConfig; /* File containing scenecut aware frame quantization related CLI options */
-#if ENABLE_MULTIVIEW
-        FILE* multiViewConfig; /* File containing multi-view related CLI options */
-#endif
         const char* reconPlayCmd;
         const x265_api* api;
         x265_param* param;
@@ -461,18 +433,12 @@ static const struct option long_options[] =
         static const int UPDATE_INTERVAL_FILE = 1000000;
         CLIOptions()
         {
-            for (int i = 0; i < MAX_VIEWS; i++)
-                input[i] = NULL;
-            for (int i = 0; i < MAX_LAYERS; i++)
-                recon[i] = NULL;
+            input = NULL;
+            recon = NULL;
             output = NULL;
             qpfile = NULL;
             zoneFile = NULL;
             dolbyVisionRpu = NULL;
-            scenecutAwareQpConfig = NULL;
-#if ENABLE_MULTIVIEW
-            multiViewConfig = NULL;
-#endif
             reconPlayCmd = NULL;
             api = NULL;
             param = NULL;
@@ -508,11 +474,6 @@ static const struct option long_options[] =
         bool parseQPFile(x265_picture &pic_org);
         bool parseZoneFile();
         int rpuParser(x265_picture * pic);
-        bool parseScenecutAwareQpConfig();
-        bool parseScenecutAwareQpParam(int argc, char **argv, x265_param* globalParam);
-#if ENABLE_MULTIVIEW
-        bool parseMultiViewConfig(char** fn);
-#endif
     };
 #ifdef __cplusplus
 }
