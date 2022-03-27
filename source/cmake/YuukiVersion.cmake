@@ -2,7 +2,8 @@
 
 find_package(Git)
 
-set(MOD_BUILD Yuuki)
+set(MOD_BUILD Kyouko)
+set(X265_BASE_BRANCH "Yuuki")
 
 execute_process(COMMAND
     ${GIT_EXECUTABLE} describe --tags --first-parent --match=[0-9].[0-9]* HEAD
@@ -11,14 +12,9 @@ execute_process(COMMAND
         ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-if("${MOD_BUILD}" STREQUAL "Yuuki")
-    set(X265_BASE_BRANCH "stable")
-else()
-    set(X265_BASE_BRANCH "old-stable")
-endif()
 
 execute_process(COMMAND
-    ${GIT_EXECUTABLE} describe --tags --first-parent origin/${X265_BASE_BRANCH}
+    ${GIT_EXECUTABLE} describe --tags --first-parent --match=[0-9].[0-9]* origin/${X265_BASE_BRANCH}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         OUTPUT_VARIABLE X265_BASE_TAG
         ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
