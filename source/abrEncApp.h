@@ -42,9 +42,12 @@ namespace X265_NS {
     {
     public:
         uint8_t           m_numEncodes;
+        int               m_numInputViews; // Number of inputs for multiview-extension
         PassEncoder        **m_passEnc;
         uint32_t           m_queueSize;
         ThreadSafeInteger  m_numActiveEncodes;
+        // Temporary duplicated param for free the analysis info, unnecessary free here
+        x265_param         *m_param;    //[numEncodes]
 
         x265_picture       ***m_inputPicBuffer; //[numEncodes][queueSize]
         x265_analysis_data **m_analysisBuffer; //[numEncodes][queueSize]
@@ -86,11 +89,12 @@ namespace X265_NS {
         x265_picture **m_outputRecon;
 
         CLIOptions m_cliopt;
-        InputFile* m_input;
+        InputFile* m_input[MAX_VIEWS];
         const char* m_reconPlayCmd;
         FILE*    m_qpfile;
         FILE*    m_zoneFile;
         FILE*    m_dolbyVisionRpu;/* File containing Dolby Vision BL RPU metadata */
+        FILE*    m_scenecutAwareQpConfig;
 
         int m_ret;
 
@@ -101,7 +105,7 @@ namespace X265_NS {
         void startThreads();
         void copyInfo(x265_analysis_data *src);
 
-        bool readPicture(x265_picture*);
+        bool readPicture(x265_picture*, int view);
         void destroy();
 
     private:
@@ -141,7 +145,7 @@ namespace X265_NS {
     public:
         PassEncoder *m_parentEnc;
         int m_id;
-        InputFile* m_input;
+        InputFile* m_input[MAX_VIEWS];
         CLIOptions* m_cliopt;
         int m_threadActive;
 
