@@ -9,6 +9,7 @@
 #include "input.h"
 #include "threading.h"
 extern "C" {
+#include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/mem.h>
 #include <libavutil/pixdesc.h>
