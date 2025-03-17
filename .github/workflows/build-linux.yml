@@ -69,7 +69,7 @@ jobs:
       working-directory: ffmpeg
       if: steps.cache-ff.outputs.cache-hit != 'true'
     - name: Install FFmpeg
-      run: make install
+      run: sudo make install
       working-directory: ffmpeg
     - name: Compile mimalloc
       run: |
@@ -80,7 +80,7 @@ jobs:
       working-directory: mimalloc
       if: steps.cache-mi.outputs.cache-hit != 'true'
     - name: Install mimalloc
-      run: ninja install
+      run: sudo ninja install
       working-directory: mimalloc/build
     - name: Setup build dir
       run: mkdir -p build/8b build/10b build/12b
