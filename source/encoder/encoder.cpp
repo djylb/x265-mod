@@ -3392,7 +3392,7 @@ void Encoder::getStreamHeaders(NALList& list, Entropy& sbacCoder, Bitstream& bs)
             if (buffer)
             {
                 if ((m_param->opts & 1) == 0)
-                    sprintf(buffer, strlen(opts) + 200,
+                    snprintf(buffer, strlen(opts) + 200,
                         "x265 - - H.265/HEVC codec - "
                         "Copyright 2013-2018 (c) Multicoreware, Inc - "
                         "http://x265.org - options: %s",
