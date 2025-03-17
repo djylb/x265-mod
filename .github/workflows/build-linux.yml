@@ -161,7 +161,7 @@ jobs:
 
     - name: Compile x265 10bit (with PGO)
       run: |
-        cp -a build/10b build/10bprof
+        cp -a 10b 10bprof
         export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
         cmake_flags="-GNinja ../../x265/source -DEXTRA_LIB=x265_8b.a;x265_12b.a \
           -DEXTRA_LINK_FLAGS='-L/usr/local/lib' -DLINKED_8BIT=ON -DLINKED_12BIT=ON \
