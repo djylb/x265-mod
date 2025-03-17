@@ -3397,7 +3397,7 @@ void Encoder::getStreamHeaders(NALList& list, Entropy& sbacCoder, Bitstream& bs)
                         "Copyright 2013-2018 (c) Multicoreware, Inc - "
                         "http://x265.org - options: %s",
                         opts);
-    
+
                 else
                     snprintf(buffer, strlen(opts) + strlen(PFX(version_str)) + strlen(PFX(build_info_str)) + 200,
                         "x265 (build %d) - %s:%s - H.265/HEVC codec - "
