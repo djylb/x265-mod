@@ -160,6 +160,7 @@ jobs:
         ninja
 
     - name: Compile x265 10bit (with PGO)
+      working-directory: build
       run: |
         cp -a 10b 10bprof
         export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
@@ -170,7 +171,7 @@ jobs:
           -DCUSTOM_TARGET_CPU=ON -DTARGET_CPU=${{ matrix.target_cpu }} \
           -DUSE_MIMALLOC=ON -DUSE_LTO=ON -DCMAKE_EXE_LINKER_FLAGS='-L/usr/local/lib' \
           -DCMAKE_ASM_NASM_FLAGS='-w-macro-params-legacy'"
-        cd build/10b
+        cd 10b
         cmake $cmake_flags "-DCMAKE_CXX_FLAGS=-I../../ffmpeg -fprofile-instr-use=${{ github.workspace }}/x265.profdata"
         ninja
         strip -s x265
@@ -179,7 +180,7 @@ jobs:
         ninja
         strip -s x265
         mv x265 x265-profiling
-      working-directory: build
+
 
     - name: Package
       run: |
