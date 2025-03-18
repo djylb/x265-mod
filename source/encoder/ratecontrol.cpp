@@ -579,8 +579,11 @@ bool RateControl::init(const SPS& sps)
                     }
                     if (m_param->analysisMultiPassRefine || m_param->analysisMultiPassDistortion)
                     {
-                        p = strstr(opts, "ctu=");
-                        sscanf(p, "ctu=%u", &k);
+                        k = -1;
+                        if ((p = strstr(opts, "ctu=")))
+                            sscanf(p, "ctu=%u", &k);
+                        else if ((p = strstr(opts, "max-cu-size=")))
+                            sscanf(p, "max-cu-size=%u", &k);
                         if (k != m_param->maxCUSize)
                         {
                             x265_log(m_param, X265_LOG_ERROR, "maxCUSize mismatch with 1st pass (%u vs %u)\n",
@@ -3028,6 +3031,7 @@ int RateControl::rowVbvRateControl(Frame* curFrame, uint32_t row, RateControlEnt
 double RateControl::getQScale(RateControlEntry *rce, double rateFactor)
 {
     double q;
+
     if (m_param->rc.qScaleMode == 3 || m_param->rc.qScaleMode == 4)
     {
         // Scale and units are obtained from rateNum and rateDenom for videos with fixed frame rates.

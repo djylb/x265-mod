@@ -347,9 +347,6 @@ void x265_param_default(x265_param* param)
     param->reconfigWindowSize = 0;
     param->decoderVbvMaxRate = 0;
     param->bliveVBV2pass = 0;
-    param->rc.cuTreeStrength = (param->rc.hevcAq ? 6.0 : 5.0) * (1.0 - param->rc.qCompress);
-    param->rc.cuTreeMinQpOffset = -QP_MAX_MAX;
-    param->rc.cuTreeMaxQpOffset = QP_MAX_MAX;
 
     /* Video Usability Information (VUI) */
     param->vui.aspectRatioIdc = 0;
@@ -445,6 +442,7 @@ void x265_param_default(x265_param* param)
     param->svtHevcParam = svtParam;
     svt_param_default(param);
 #endif
+
     /* Film grain characteristics model filename */
     param->filmGrain = NULL;
     param->aomFilmGrain = NULL;
@@ -2342,106 +2340,106 @@ char *x265_param2string(x265_param* p, int padx, int pady)
 
 
     // Important parameters first
-    s += sprintf(s, " rc=%s", p->rc.rateControlMode == X265_RC_ABR ? (
-         p->rc.bitrate == p->rc.vbvMaxBitrate ? "cbr" : "abr")
-         : p->rc.rateControlMode == X265_RC_CRF ? "crf" : "cqp");
+    s += snprintf(s, bufSize - (s - buf), " rc=%s", p->rc.rateControlMode == X265_RC_ABR ? (
+             p->rc.bitrate == p->rc.vbvMaxBitrate ? "cbr" : "abr")
+             : p->rc.rateControlMode == X265_RC_CRF ? "crf" : "cqp");
     if (p->rc.rateControlMode == X265_RC_ABR || p->rc.rateControlMode == X265_RC_CRF)
     {
         if (p->rc.rateControlMode == X265_RC_CRF)
-            s += sprintf(s, " crf=%.4f", p->rc.rfConstant);
+            s += snprintf(s, bufSize - (s - buf), " crf=%.4f", p->rc.rfConstant);
         else
-            s += sprintf(s, " bitrate=%d", p->rc.bitrate);
-        s += sprintf(s, " qcomp=%.2f qpstep=%d", p->rc.qCompress, p->rc.qpStep);
-        s += sprintf(s, " stats-write=%d", p->rc.bStatWrite);
-        s += sprintf(s, " stats-read=%d", p->rc.bStatRead);
+            s += snprintf(s, bufSize - (s - buf), " bitrate=%d", p->rc.bitrate);
+        s += snprintf(s, bufSize - (s - buf), " qcomp=%.2f qpstep=%d", p->rc.qCompress, p->rc.qpStep);
+        s += snprintf(s, bufSize - (s - buf), " stats-write=%d", p->rc.bStatWrite);
+        s += snprintf(s, bufSize - (s - buf), " stats-read=%d", p->rc.bStatRead);
         if (p->rc.bStatRead)
-            s += sprintf(s, " cplxblur=%.1f qblur=%.1f",
-            p->rc.complexityBlur, p->rc.qblur);
+            s += snprintf(s, bufSize - (s - buf), " cplxblur=%.1f qblur=%.1f",
+                p->rc.complexityBlur, p->rc.qblur);
         if (p->rc.bStatWrite && !p->rc.bStatRead)
             BOOL(p->rc.bEnableSlowFirstPass, "slow-firstpass");
         if (p->rc.vbvBufferSize)
         {
-            s += sprintf(s, " vbv-maxrate=%d vbv-bufsize=%d vbv-init=%.1f min-vbv-fullness=%.1f max-vbv-fullness=%.1f",
-                p->rc.vbvMaxBitrate, p->rc.vbvBufferSize, p->rc.vbvBufferInit, p->minVbvFullness, p->maxVbvFullness);
+            s += snprintf(s, bufSize - (s - buf), " vbv-maxrate=%d vbv-bufsize=%d vbv-init=%.1f min-vbv-fullness=%.1f max-vbv-fullness=%.1f",
+                    p->rc.vbvMaxBitrate, p->rc.vbvBufferSize, p->rc.vbvBufferInit, p->minVbvFullness, p->maxVbvFullness);
             if (p->vbvBufferEnd)
-                s += sprintf(s, " vbv-end=%.1f vbv-end-fr-adj=%.1f", p->vbvBufferEnd, p->vbvEndFrameAdjust);
+                s += snprintf(s, bufSize - (s - buf), " vbv-end=%.1f vbv-end-fr-adj=%.1f", p->vbvBufferEnd, p->vbvEndFrameAdjust);
             if (p->rc.rateControlMode == X265_RC_CRF)
-                s += sprintf(s, " crf-max=%.1f crf-min=%.1f", p->rc.rfConstantMax, p->rc.rfConstantMin);   
+                s += snprintf(s, bufSize - (s - buf), " crf-max=%.1f crf-min=%.1f", p->rc.rfConstantMax, p->rc.rfConstantMin);   
         }
     }
     else if (p->rc.rateControlMode == X265_RC_CQP)
-        s += sprintf(s, " qp=%d", p->rc.qp);
-    s += sprintf(s, " qscale-mode=%d", p->rc.qScaleMode);
+        s += snprintf(s, bufSize - (s - buf), " qp=%d", p->rc.qp);
+    s += snprintf(s, bufSize - (s - buf), " qscale-mode=%d", p->rc.qScaleMode);
 
     BOOL(p->bLossless, "lossless");
     BOOL(p->bCULossless, "cu-lossless");
 
-    s += sprintf(s, " aq-mode=%d", p->rc.aqMode);
+    s += snprintf(s, bufSize - (s - buf), " aq-mode=%d", p->rc.aqMode);
     BOOL(p->rc.limitAq1, "limit-aq1");
-    s += sprintf(s, " aq-strength=%.2f", p->rc.aqStrength);
-    s += sprintf(s, " aq-bias-strength=%.2f", p->rc.aqBiasStrength);
-    s += sprintf(s, " limit-aq1-strength=%.2f", p->rc.limitAq1Strength);
-    s += sprintf(s, " cbqpoffs=%d", p->cbQpOffset);
-    s += sprintf(s, " crqpoffs=%d", p->crQpOffset);
+    s += snprintf(s, bufSize - (s - buf), " aq-strength=%.2f", p->rc.aqStrength);
+    s += snprintf(s, bufSize - (s - buf), " aq-bias-strength=%.2f", p->rc.aqBiasStrength);
+    s += snprintf(s, bufSize - (s - buf), " limit-aq1-strength=%.2f", p->rc.limitAq1Strength);
+    s += snprintf(s, bufSize - (s - buf), " cbqpoffs=%d", p->cbQpOffset);
+    s += snprintf(s, bufSize - (s - buf), " crqpoffs=%d", p->crQpOffset);
     if (!(p->rc.rateControlMode == X265_RC_CQP && p->rc.qp == 0))
     {
-        s += sprintf(s, " ipratio=%.2f", p->rc.ipFactor);
+        s += snprintf(s, bufSize - (s - buf), " ipratio=%.2f", p->rc.ipFactor);
         if (p->bframes)
-            s += sprintf(s, " pbratio=%.2f", p->rc.pbFactor);
+            s += snprintf(s, bufSize - (s - buf), " pbratio=%.2f", p->rc.pbFactor);
     }
 
-    s += sprintf(s, " psy-rd=%.2f", p->psyRd);
-    s += sprintf(s, " psy-rdoq=%.2f", p->psyRdoq);
-    s += sprintf(s, " psy-bscale=%d", p->psyScaleB);
-    s += sprintf(s, " psy-pscale=%d", p->psyScaleP);
-    s += sprintf(s, " psy-iscale=%d", p->psyScaleI);
+    s += snprintf(s, bufSize - (s - buf), " psy-rd=%.2f", p->psyRd);
+    s += snprintf(s, bufSize - (s - buf), " psy-rdoq=%.2f", p->psyRdoq);
+    s += snprintf(s, bufSize - (s - buf), " psy-bscale=%d", p->psyScaleB);
+    s += snprintf(s, bufSize - (s - buf), " psy-pscale=%d", p->psyScaleP);
+    s += snprintf(s, bufSize - (s - buf), " psy-iscale=%d", p->psyScaleI);
 
     BOOL(p->bEnableLoopFilter, "deblock");
     if (p->bEnableLoopFilter)
-        s += sprintf(s, "=%d:%d", p->deblockingFilterTCOffset, p->deblockingFilterBetaOffset);
+        s += snprintf(s, bufSize - (s - buf), "=%d:%d", p->deblockingFilterTCOffset, p->deblockingFilterBetaOffset);
 
-    s += sprintf(s, " ref=%d", p->maxNumReferences);
-    s += sprintf(s, " limit-refs=%d", p->limitReferences);
+    s += snprintf(s, bufSize - (s - buf), " ref=%d", p->maxNumReferences);
+    s += snprintf(s, bufSize - (s - buf), " limit-refs=%d", p->limitReferences);
     BOOL(p->limitModes, "limit-modes");
-    s += sprintf(s, " bframes=%d", p->bframes);
-    s += sprintf(s, " b-adapt=%d", p->bFrameAdaptive);
-    s += sprintf(s, " bframe-bias=%d", p->bFrameBias);
+    s += snprintf(s, bufSize - (s - buf), " bframes=%d", p->bframes);
+    s += snprintf(s, bufSize - (s - buf), " b-adapt=%d", p->bFrameAdaptive);
+    s += snprintf(s, bufSize - (s - buf), " bframe-bias=%d", p->bFrameBias);
     BOOL(p->bBPyramid, "b-pyramid");
     BOOL(p->bIntraInBFrames, "b-intra");
     BOOL(p->bEnableWeightedPred, "weightp");
     BOOL(p->bEnableWeightedBiPred, "weightb");
 
-    s += sprintf(s, " min-keyint=%d", p->keyframeMin);
-    s += sprintf(s, " max-keyint=%d", p->keyframeMax);
+    s += snprintf(s, bufSize - (s - buf), " min-keyint=%d", p->keyframeMin);
+    s += snprintf(s, bufSize - (s - buf), " max-keyint=%d", p->keyframeMax);
 
-    s += sprintf(s, " rc-lookahead=%d", p->lookaheadDepth);
-    s += sprintf(s, " gop-lookahead=%d", p->gopLookahead);
+    s += snprintf(s, bufSize - (s - buf), " rc-lookahead=%d", p->lookaheadDepth);
+    s += snprintf(s, bufSize - (s - buf), " gop-lookahead=%d", p->gopLookahead);
 
-    s += sprintf(s, " scenecut=%d", p->scenecutThreshold);
-    s += sprintf(s, " hist-scenecut=%d", p->bHistBasedSceneCut);
-    s += sprintf(s, " radl=%d", p->radl);
+    s += snprintf(s, bufSize - (s - buf), " scenecut=%d", p->scenecutThreshold);
+    BOOL(p->bHistBasedSceneCut, "hist-scenecut");
+    s += snprintf(s, bufSize - (s - buf), " radl=%d", p->radl);
 
-    s += sprintf(s, " max-cu-size=%d", p->maxCUSize);
-    s += sprintf(s, " min-cu-size=%d", p->minCUSize);
+    s += snprintf(s, bufSize - (s - buf), " max-cu-size=%d", p->maxCUSize);
+    s += snprintf(s, bufSize - (s - buf), " min-cu-size=%d", p->minCUSize);
 
-    s += sprintf(s, " me=%d", p->searchMethod);
-    s += sprintf(s, " subme=%d", p->subpelRefine);
-    s += sprintf(s, " merange=%d", p->searchRange);
+    s += snprintf(s, bufSize - (s - buf), " me=%d", p->searchMethod);
+    s += snprintf(s, bufSize - (s - buf), " subme=%d", p->subpelRefine);
+    s += snprintf(s, bufSize - (s - buf), " merange=%d", p->searchRange);
 
-    s += sprintf(s, " rdoq-level=%d", p->rdoqLevel);
-    s += sprintf(s, " rd=%d", p->rdLevel);
-    s += sprintf(s, " rdpenalty=%d", p->rdPenalty);
-    s += sprintf(s, " dynamic-rd=%.2f", p->dynamicRd);
+    s += snprintf(s, bufSize - (s - buf), " rdoq-level=%d", p->rdoqLevel);
+    s += snprintf(s, bufSize - (s - buf), " rd=%d", p->rdLevel);
+    s += snprintf(s, bufSize - (s - buf), " rdpenalty=%d", p->rdPenalty);
+    s += snprintf(s, bufSize - (s - buf), " dynamic-rd=%.2f", p->dynamicRd);
     BOOL(p->bEnableRdRefine, "rd-refine");
 
-    s += sprintf(s, " -----");
+    s += snprintf(s, bufSize - (s - buf), " -----");
 
     // Less important parameters here
 
     BOOL(p->rc.cuTree, "cutree");
-    s += sprintf(s, " cutree-strength=%.2f", p->rc.cuTreeStrength);
-    s += sprintf(s, " cutree-minqpoffs=%.2f", p->rc.cuTreeMinQpOffset);
-    s += sprintf(s, " cutree-maxqpoffs=%.2f", p->rc.cuTreeMaxQpOffset);
+    s += snprintf(s, bufSize - (s - buf), " cutree-strength=%.2f", p->rc.cuTreeStrength);
+    s += snprintf(s, bufSize - (s - buf), " cutree-minqpoffs=%.2f", p->rc.cuTreeMinQpOffset);
+    s += snprintf(s, bufSize - (s - buf), " cutree-maxqpoffs=%.2f", p->rc.cuTreeMaxQpOffset);
     BOOL(p->bEnableSAO, "sao");
     BOOL(p->bEnableRectInter, "rect");
     BOOL(p->bEnableAMP, "amp");
@@ -2451,43 +2449,43 @@ char *x265_param2string(x265_param* p, int padx, int pady)
     BOOL(p->bDistributeMotionEstimation, "pme");
     BOOL(p->bEnablePsnr, "psnr");
     BOOL(p->bEnableSsim, "ssim");
-    s += sprintf(s, " nr-intra=%d", p->noiseReductionIntra);
-    s += sprintf(s, " nr-inter=%d", p->noiseReductionInter);
+    s += snprintf(s, bufSize - (s - buf), " nr-intra=%d", p->noiseReductionIntra);
+    s += snprintf(s, bufSize - (s - buf), " nr-inter=%d", p->noiseReductionInter);
     BOOL(p->bEnableConstrainedIntra, "constrained-intra");
     BOOL(p->bEnableStrongIntraSmoothing, "strong-intra-smoothing");
 
-    s += sprintf(s, " max-tu-size=%d", p->maxTUSize);
-    s += sprintf(s, " tu-inter-depth=%d", p->tuQTMaxInterDepth);
-    s += sprintf(s, " tu-intra-depth=%d", p->tuQTMaxIntraDepth);
-    s += sprintf(s, " limit-tu=%d", p->limitTU);
+    s += snprintf(s, bufSize - (s - buf), " max-tu-size=%d", p->maxTUSize);
+    s += snprintf(s, bufSize - (s - buf), " tu-inter-depth=%d", p->tuQTMaxInterDepth);
+    s += snprintf(s, bufSize - (s - buf), " tu-intra-depth=%d", p->tuQTMaxIntraDepth);
+    s += snprintf(s, bufSize - (s - buf), " limit-tu=%d", p->limitTU);
 
-    s += sprintf(s, " qg-size=%d", p->rc.qgSize);
-    s += sprintf(s, " qpmax=%d qpmin=%d", p->rc.qpMax, p->rc.qpMin);
+    s += snprintf(s, bufSize - (s - buf), " qg-size=%d", p->rc.qgSize);
+    s += snprintf(s, bufSize - (s - buf), " qpmax=%d qpmin=%d", p->rc.qpMax, p->rc.qpMin);
 
-    s += sprintf(s, " -----");
+    s += snprintf(s, bufSize - (s - buf), " -----");
 
     // Who cares?
 
-    s += sprintf(s, " cpuid=%d", p->cpuid);
-    s += sprintf(s, " frame-threads=%d", p->frameNumThreads);
+    s += snprintf(s, bufSize - (s - buf), " cpuid=%d", p->cpuid);
+    s += snprintf(s, bufSize - (s - buf), " frame-threads=%d", p->frameNumThreads);
     if (p->numaPools)
-        s += sprintf(s, " numa-pools=%s", p->numaPools);
+        s += snprintf(s, bufSize - (s - buf), " numa-pools=%s", p->numaPools);
 
-    s += sprintf(s, " log-level=%d", p->logLevel);
+    s += snprintf(s, bufSize - (s - buf), " log-level=%d", p->logLevel);
     if (p->csvfn)
-        s += sprintf(s, " csv csv-log-level=%d", p->csvLogLevel);
-    s += sprintf(s, " bitdepth=%d", p->internalBitDepth);
-    s += sprintf(s, " input-csp=%d", p->internalCsp);
-    s += sprintf(s, " fps=%u/%u", p->fpsNum, p->fpsDenom);
-    s += sprintf(s, " input-res=%dx%d", p->sourceWidth - padx, p->sourceHeight - pady);
-    s += sprintf(s, " interlace=%d", p->interlaceMode);
+        s += snprintf(s, bufSize - (s - buf), " csv csv-log-level=%d", p->csvLogLevel);
+    s += snprintf(s, bufSize - (s - buf), " bitdepth=%d", p->internalBitDepth);
+    s += snprintf(s, bufSize - (s - buf), " input-csp=%d", p->internalCsp);
+    s += snprintf(s, bufSize - (s - buf), " fps=%u/%u", p->fpsNum, p->fpsDenom);
+    s += snprintf(s, bufSize - (s - buf), " input-res=%dx%d", p->sourceWidth - padx, p->sourceHeight - pady);
+    s += snprintf(s, bufSize - (s - buf), " interlace=%d", p->interlaceMode);
     if (p->chunkStart)
         s += snprintf(s, bufSize - (s - buf), " chunk-start=%d", p->chunkStart);
     if (p->chunkEnd)
-        s += sprintf(s, " chunk-end=%d", p->chunkEnd);
-    s += sprintf(s, " level-idc=%d", p->levelIdc);
-    s += sprintf(s, " high-tier=%d", p->bHighTier);
-    s += sprintf(s, " uhd-bd=%d", p->uhdBluray);
+        s += snprintf(s, bufSize - (s - buf), " chunk-end=%d", p->chunkEnd);
+    s += snprintf(s, bufSize - (s - buf), " level-idc=%d", p->levelIdc);
+    s += snprintf(s, bufSize - (s - buf), " high-tier=%d", p->bHighTier);
+    s += snprintf(s, bufSize - (s - buf), " uhd-bd=%d", p->uhdBluray);
     BOOL(p->bAllowNonConformance, "allow-non-conformance");
     BOOL(p->bRepeatHeaders, "repeat-headers");
     BOOL(p->bEnableAccessUnitDelimiters, "aud");
@@ -2495,15 +2493,15 @@ char *x265_param2string(x265_param* p, int padx, int pady)
     BOOL(p->bEnableEndOfSequence, "eos");
     BOOL(p->bEmitHRDSEI, "hrd");
     BOOL(p->bEmitInfoSEI, "info");
-    s += sprintf(s, " hash=%d", p->decodedPictureHashSEI);
+    s += snprintf(s, bufSize - (s - buf), " hash=%d", p->decodedPictureHashSEI);
     BOOL(p->bEnableTemporalSubLayers, "temporal-layers");
-    s += sprintf(s, " lookahead-slices=%d", p->lookaheadSlices);
+    s += snprintf(s, bufSize - (s - buf), " lookahead-slices=%d", p->lookaheadSlices);
     BOOL(p->bEnableHRDConcatFlag, "splice");
     BOOL(p->bIntraRefresh, "intra-refresh");
     BOOL(p->bSsimRd, "ssim-rd");
     BOOL(p->bEnableSignHiding, "signhide");
     BOOL(p->bEnableTransformSkip, "tskip");
-    s += sprintf(s, " max-merge=%d", p->maxNumMergeCand);
+    s += snprintf(s, bufSize - (s - buf), " max-merge=%d", p->maxNumMergeCand);
     BOOL(p->bEnableTemporalMvp, "temporal-mvp");
     BOOL(p->bEnableFrameDuplication, "frame-dup");
     if(p->bEnableFrameDuplication)
@@ -2516,7 +2514,7 @@ char *x265_param2string(x265_param* p, int padx, int pady)
     }
     BOOL(p->bSourceReferenceEstimation, "analyze-src-pics");
     BOOL(p->bSaoNonDeblocked, "sao-non-deblock");
-    s += sprintf(s, " selective-sao=%d", p->selectiveSAO);
+    s += snprintf(s, bufSize - (s - buf), " selective-sao=%d", p->selectiveSAO);
     BOOL(p->bEnableEarlySkip, "early-skip");
     BOOL(p->recursionSkipMode, "rskip");
     if (p->recursionSkipMode == EDGE_BASED_RSKIP)
@@ -2526,7 +2524,7 @@ char *x265_param2string(x265_param* p, int padx, int pady)
     BOOL(p->bEnableTSkipFast, "tskip-fast");
     BOOL(p->bEnableSplitRdSkip, "splitrd-skip");
 
-    s += sprintf(s, " zone-count=%d", p->rc.zoneCount);
+    s += snprintf(s, bufSize - (s - buf), " zone-count=%d", p->rc.zoneCount);
     if (p->rc.zoneCount)
     {
         for (int i = 0; i < p->rc.zoneCount; ++i)

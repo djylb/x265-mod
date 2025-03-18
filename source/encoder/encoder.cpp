@@ -3378,13 +3378,15 @@ void Encoder::getStreamHeaders(NALList& list, Entropy& sbacCoder, Bitstream& bs)
             if (buffer)
             {
                 if ((m_param->opts & 1) == 0)
-                    sprintf(buffer, "x265 - - H.265/HEVC codec - "
+                    snprintf(buffer, strlen(opts) + 200,
+                        "x265 - - H.265/HEVC codec - "
                         "Copyright 2013-2018 (c) Multicoreware, Inc - "
                         "http://x265.org - options: %s",
                         opts);
 
                 else
-                    sprintf(buffer, "x265 (build %d) - %s:%s - H.265/HEVC codec - "
+                    snprintf(buffer, strlen(opts) + strlen(PFX(version_str)) + strlen(PFX(build_info_str)) + 200,
+                        "x265 (build %d) - %s:%s - H.265/HEVC codec - "
                         "Copyright 2013-2018 (c) Multicoreware, Inc - "
                         "http://x265.org - options: %s",
                         X265_BUILD, PFX(version_str), PFX(build_info_str), opts);
@@ -5144,14 +5146,14 @@ void Encoder::readAnalysisFile(x265_analysis_data* analysis, int curPoc, const x
 
     if (analysis->sliceType == X265_TYPE_IDR || analysis->sliceType == X265_TYPE_I)
     {
-		if (m_param->analysisLoadReuseLevel < 2)
-		{
-			/* Restore to the current encode's numPartitions and numCUsInFrame */
-			analysis->numPartitions = m_param->num4x4Partitions;
-			analysis->numCUsInFrame = cuLoc.heightInCU * cuLoc.widthInCU;
-			analysis->numCuInHeight = cuLoc.heightInCU;
-			return;
-		}
+        if (m_param->analysisLoadReuseLevel < 2)
+        {
+            /* Restore to the current encode's numPartitions and numCUsInFrame */
+            analysis->numPartitions = m_param->num4x4Partitions;
+            analysis->numCUsInFrame = cuLoc.heightInCU * cuLoc.widthInCU;
+            analysis->numCuInHeight = cuLoc.heightInCU;
+            return;
+        }
 
         uint8_t *tempBuf = NULL, *depthBuf = NULL, *modeBuf = NULL, *partSizes = NULL;
         int8_t *cuQPBuf = NULL;
@@ -5219,14 +5221,14 @@ void Encoder::readAnalysisFile(x265_analysis_data* analysis, int curPoc, const x
         uint32_t numDir = analysis->sliceType == X265_TYPE_P ? 1 : 2;
         uint32_t numPlanes = m_param->internalCsp == X265_CSP_I400 ? 1 : 3;
         X265_FREAD((WeightParam*)analysis->wt, sizeof(WeightParam), numPlanes * numDir, m_analysisFileIn, (picIn->analysisData.wt));
-		if (m_param->analysisLoadReuseLevel < 2)
-		{
-			/* Restore to the current encode's numPartitions and numCUsInFrame */
-			analysis->numPartitions = m_param->num4x4Partitions;
-			analysis->numCUsInFrame = cuLoc.heightInCU * cuLoc.widthInCU;
-			analysis->numCuInHeight = cuLoc.heightInCU;
-			return;
-		}
+        if (m_param->analysisLoadReuseLevel < 2)
+        {
+            /* Restore to the current encode's numPartitions and numCUsInFrame */
+            analysis->numPartitions = m_param->num4x4Partitions;
+            analysis->numCUsInFrame = cuLoc.heightInCU * cuLoc.widthInCU;
+            analysis->numCuInHeight = cuLoc.heightInCU;
+            return;
+        }
 
         uint8_t *tempBuf = NULL, *depthBuf = NULL, *modeBuf = NULL, *partSize = NULL, *mergeFlag = NULL;
         uint8_t *interDir = NULL, *chromaDir = NULL, *mvpIdx[2];

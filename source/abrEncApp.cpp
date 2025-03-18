@@ -274,6 +274,7 @@ namespace X265_NS {
             }
         }
         m_cliopt.output->setParam(m_param);
+
         /* note: we could try to acquire a different libx265 API here based on
         * the profile found during option parsing, but it must be done before
         * opening an encoder */
@@ -601,9 +602,7 @@ ret:
 #endif
             memcpy(&m_parent->m_param[m_id], m_param, sizeof(x265_param));
             /* This allows muxers to modify bitstream format */
-            m_cliopt.output->setParam(m_param);
             const x265_api* api = m_cliopt.api;
-            /* This allows muxers to modify bitstream format */
             ReconPlay* reconPlay = NULL;
             if (m_cliopt.reconPlayCmd)
                 reconPlay = new ReconPlay(m_cliopt.reconPlayCmd, *m_param);
@@ -963,10 +962,8 @@ ret:
             m_cliopt.output->closeFile(largest_pts, second_largest_pts);
 
             if (b_ctrl_c)
-            {
                 general_log(m_param, NULL, X265_LOG_INFO, "aborted at input frame %d, output frame %d in %s\n",
                     m_cliopt.seek + inFrameCount, stats.encodedPictureCount, profileName);
-            }
 
             api->param_free(m_param);
 
@@ -1177,6 +1174,7 @@ ret:
         m_id = id;
         for (int view = 0; view < MAX_VIEWS; view++)
             m_input[view] = parentEnc->m_input[view];
+        m_cliopt = &parentEnc->m_cliopt;
     }
 
     void Reader::threadMain()
@@ -1206,8 +1204,20 @@ ret:
             {
                 x265_picture* dest = (m_parentEnc->m_param->numViews > 1) ? m_parentEnc->m_parent->m_inputPicBuffer[view][writeIdx] : m_parentEnc->m_parent->m_inputPicBuffer[m_id][writeIdx];
                 src->format = m_parentEnc->m_param->format;
-                if (m_input[view]->readPicture(*src))
+                if (m_input[view]->readPicture(*src) && !b_ctrl_c)
                 {
+                    for (auto &&i : m_cliopt->filters)
+                    {
+                        i->processFrame(*src);
+                        if (i->isFail())
+                        {
+                            m_threadActive = false;
+                            m_parentEnc->m_inputOver = true;
+                            m_parentEnc->m_parent->m_picWriteCnt[m_id].poke();
+                            break;
+                        }
+                    }
+
                     dest->poc = src->poc;
                     dest->pts = src->pts;
                     dest->userSEI = src->userSEI;

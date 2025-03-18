@@ -300,12 +300,12 @@ namespace X265_NS {
             "                                    - 1 : Store/Load ctu distortion to/from the file specified in analysis-save/load.\n"
             "                                Default 0 - Disabled\n");
         H0("   --aq-mode <integer>           Mode for Adaptive Quantization\n"
-           "                                     - 0 : none\n"
-           "                                     - 1 : uniform AQ\n"
-           "                                     - 2 : auto variance\n"
-           "                                     - 3 : variance with bias to dark scenes\n"
-           "                                     - 4 : auto variance with edge information\n"
-           "                                     - 5 : auto variance with edge information and bias to dark scenes.\n"
+           "                                   - 0:none\n"
+           "                                   - 1:uniform AQ\n"
+           "                                   - 2:auto variance\n"
+           "                                   - 3:auto variance with bias to dark scenes\n"
+           "                                   - 4:auto variance with edge information.\n"
+           "                                   - 5:auto variance with edge information and bias to dark scenes.\n"
            "                                 Default %d\n", param->rc.aqMode);
         H0("   --[no-]limit-aq1              Use QP offset determined by aq-mode 1 (uniform AQ) as hard upper limit on QP offset allowed in aq-mode 2-5. This (might) help in scenes with large complexity differences among blocks. Default is %s\n", OPT(param->rc.limitAq1));
         H0("   --[no-]hevc-aq                Mode for HEVC Adaptive Quantization. Default %s\n", OPT(param->rc.hevcAq));
@@ -416,13 +416,13 @@ namespace X265_NS {
         H0("   --[no-]idr-recovery-sei       Emit recovery point infor SEI at each IDR frame \n");
         H0("   --temporal-layers             Enable a temporal sublayer for unreferenced B frames. Default %s\n", OPT(param->bEnableTemporalSubLayers));
         H0("   --[no-]aud                    Emit access unit delimiters at the start of each access unit. Default %s\n", OPT(param->bEnableAccessUnitDelimiters));
+        H0("   --[no-]eob                    Emit end of bitstream nal unit at the end of the bitstream. Default %s\n", OPT(param->bEnableEndOfBitstream));
+        H0("   --[no-]eos                    Emit end of sequence nal unit at the end of every coded video sequence. Default %s\n", OPT(param->bEnableEndOfSequence));
         H1("   --opts <integer>              Set level of writing options in SEI [%d]\n"
            "                                     - 0: no information will be written in SEI\n"
            "                                     - 1: write x265 information\n"
            "                                     - 2: write x265 options\n"
            "                                     - 3: write x265 information and options\n", param->opts);
-        H0("   --[no-]eob                    Emit end of bitstream nal unit at the end of the bitstream. Default %s\n", OPT(param->bEnableEndOfBitstream));
-        H0("   --[no-]eos                    Emit end of sequence nal unit at the end of every coded video sequence. Default %s\n", OPT(param->bEnableEndOfSequence));
         H1("   --hash <integer>              Decoded Picture Hash SEI 0: disabled, 1: MD5, 2: CRC, 3: Checksum. Default %d\n", param->decodedPictureHashSEI);
         H0("   --atc-sei <integer>           Emit the alternative transfer characteristics SEI message where the integer is the preferred transfer characteristic. Default disabled\n");
         H0("   --pic-struct <integer>        Set the picture structure and emit it in the picture timing SEI message. Values in the range 0..12. See D.3.3 of the HEVC spec. for a detailed explanation.\n");
@@ -588,14 +588,14 @@ namespace X265_NS {
             estsz_prec = estsz < 1024000 ? 2 : estsz < 10240000 ? 1 : 0;
             estsz_num  = estsz < 1024 ? estsz : estsz / 1024;
             estsz_unit = estsz < 1024 ? "K" : "M";
-            sprintf(buf, "x265 [%.1f%%] %d/%d frames, %.*f fps, %.*f kb/s, %.*f %sB, eta %d:%02d:%02d, est.size %.*f %sB",
+            snprintf(buf, sizeof(buf), "x265 [%.1f%%] %d/%d frames, %.*f fps, %.*f kb/s, %.*f %sB, eta %d:%02d:%02d, est.size %.*f %sB",
                     percentage, frameNum, (param->chunkEnd ? param->chunkEnd : param->totalFrames), fps_prec, fps, bitrate_prec, bitrate,
                     file_prec, file_num, file_unit,
                     eta_hh, eta_mm, eta_ss,
                     estsz_prec, estsz_num, estsz_unit);
         }
         else
-            sprintf(buf, "x265 %d frames: %.*f fps, %.*f kb/s, %.*f %sB",
+            snprintf(buf, sizeof(buf), "x265 %d frames: %.*f fps, %.*f kb/s, %.*f %sB",
                     frameNum, fps_prec, fps, bitrate_prec, bitrate,
                     file_prec, file_num, file_unit);
 
@@ -942,8 +942,8 @@ namespace X265_NS {
                     if (!this->zoneFile)
                         x265_log_file(param, X265_LOG_ERROR, "%s zone file not found or error in opening zone file\n", optarg);
                 }
-                OPT("vf") this->vf = optarg;
                 OPT("no-zonefile-rc-init") this->param->bNoResetZoneConfig = true;
+                OPT("vf") this->vf = optarg;
                 OPT("fullhelp")
                 {
                     param->logLevel = X265_LOG_FULL;
@@ -1044,6 +1044,7 @@ namespace X265_NS {
             info[i].sarWidth = param->vui.sarWidth;
             info[i].sarHeight = param->vui.sarHeight;
             info[i].skipFrames = seek;
+            info[i].encodeToFrame = this->framesToBeEncoded;
             info[i].frameCount = 0;
             getParamAspectRatio(param, info[i].sarWidth, info[i].sarHeight);
 
@@ -1059,13 +1060,13 @@ namespace X265_NS {
                 x265_log(param, X265_LOG_ERROR, "Input bit depth (%d) must be between 8 and 16\n", inputBitDepth);
                 return true;
             }
-        }
 
-        if (this->vf)
-        {
-            bool bFail = Filter::parseFilterString(this->vf, &this->filters);
-            if (bFail)
-                return true;
+            if (this->vf)
+            {
+                bool bFail = Filter::parseFilterString(this->vf, &this->filters);
+                if (bFail)
+                    return true;
+            }
         }
 
             //TODO:Validate info params of both the views to equal values
