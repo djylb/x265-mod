@@ -32,6 +32,10 @@
 namespace X265_NS {
 // private namespace
 
+#define HISTOGRAM_NUMBER_OF_BINS         256
+#define NUMBER_OF_SEGMENTS_IN_WIDTH      4
+#define NUMBER_OF_SEGMENTS_IN_HEIGHT     4
+
 struct ReferencePlanes
 {
     ReferencePlanes() { memset(this, 0, sizeof(ReferencePlanes)); }
@@ -67,11 +71,7 @@ struct ReferencePlanes
     inline pixel *lowresMC(intptr_t blockOffset, const MV& qmv, pixel *buf, intptr_t& outstride, bool hme)
     {
         intptr_t YStride = hme ? lumaStride / 2 : lumaStride;
-        pixel *plane[4];
-        for (int i = 0; i < 4; i++)
-        {
-            plane[i] = hme ? lowerResPlane[i] : lowresPlane[i];
-        }
+        pixel **plane = hme ? lowerResPlane : lowresPlane;
         if ((qmv.x | qmv.y) & 1)
         {
             int hpelA = (qmv.y & 2) | ((qmv.x & 2) >> 1);
@@ -94,11 +94,7 @@ struct ReferencePlanes
     inline int lowresQPelCost(pixel *fenc, intptr_t blockOffset, const MV& qmv, pixelcmp_t comp, bool hme)
     {
         intptr_t YStride = hme ? lumaStride / 2 : lumaStride;
-        pixel *plane[4];
-        for (int i = 0; i < 4; i++)
-        {
-            plane[i] = hme ? lowerResPlane[i] : lowresPlane[i];
-        }
+        pixel **plane = hme ? lowerResPlane : lowresPlane;
         if ((qmv.x | qmv.y) & 1)
         {
             ALIGN_VAR_16(pixel, subpelbuf[8 * 8]);
@@ -171,6 +167,7 @@ struct Lowres : public ReferencePlanes
 
     int    frameNum;         // Presentation frame number
     int    sliceType;        // Slice type decided by lookahead
+    int    sliceTypeReq;     // Slice type required as per the QP file
     int    width;            // width of lowres frame in pixels
     int    lines;            // height of lowres frame in pixel lines
     int    leadingBframes;   // number of leading B frames for P or I
@@ -194,6 +191,7 @@ struct Lowres : public ReferencePlanes
     uint16_t* lowresCosts[X265_BFRAME_MAX + 2][X265_BFRAME_MAX + 2];
     int32_t*  lowresMvCosts[2][X265_BFRAME_MAX + 2];
     MV*       lowresMvs[2][X265_BFRAME_MAX + 2];
+    MV*       lowresMcstfMvs[2][4];
     uint32_t  maxBlocksInRow;
     uint32_t  maxBlocksInCol;
     uint32_t  maxBlocksInRowFullRes;
@@ -214,13 +212,13 @@ struct Lowres : public ReferencePlanes
     double*   qpAqOffset;      // AQ QP offset values for each 16x16 CU
     double*   qpCuTreeOffset;  // cuTree QP offset values for each 16x16 CU
     double*   qpAqMotionOffset;
-    int*      invQscaleFactor; // qScale values for qp Aq Offsets
+    int*      invQscaleFactor;    // qScale values for qp Aq Offsets
     int*      invQscaleFactor8x8; // temporary buffer for qg-size 8
     uint32_t* blockVariance;
     uint64_t  wp_ssd[3];       // This is different than SSDY, this is sum(pixel^2) - sum(pixel)^2 for entire frame
     uint64_t  wp_sum[3];
     double    frameVariance;
-    int* edgeInclined;
+    int*      edgeInclined;
 
 
     /* cutree intermediate data */
@@ -230,18 +228,30 @@ struct Lowres : public ReferencePlanes
     uint32_t heightFullRes;
     uint32_t m_maxCUSize;
     uint32_t m_qgSize;
-    
+
     uint16_t* propagateCost;
     double    weightedCostDelta[X265_BFRAME_MAX + 2];
     ReferencePlanes weightedRef[X265_BFRAME_MAX + 2];
+
     /* For hist-based scenecut */
-    bool   m_bIsMaxThres;
-    double interPCostPercDiff;
-    double intraCostPercDiff;
-    bool   m_bIsHardScenecut;
+    int          quarterSampleLowResWidth;     // width of 1/4 lowres frame in pixels
+    int          quarterSampleLowResHeight;    // height of 1/4 lowres frame in pixels
+    int          quarterSampleLowResStrideY;
+    int          quarterSampleLowResOriginX;
+    int          quarterSampleLowResOriginY;
+    pixel       *quarterSampleLowResBuffer;
+    bool         bHistScenecutAnalyzed;
+
+    uint16_t     picAvgVariance;
+    uint16_t     picAvgVarianceCb;
+    uint16_t     picAvgVarianceCr;
+
+    uint32_t ****picHistogram;
+    uint64_t     averageIntensityPerSegment[NUMBER_OF_SEGMENTS_IN_WIDTH][NUMBER_OF_SEGMENTS_IN_HEIGHT][3];
+    uint8_t      averageIntensity[3];
 
     bool create(x265_param* param, PicYuv *origPic, uint32_t qgSize);
-    void destroy();
+    void destroy(x265_param* param);
     void init(PicYuv *origPic, int poc);
 };
 }
