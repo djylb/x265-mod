@@ -406,6 +406,32 @@ bool PixelHarness::check_downscale_t(downscale_t ref, downscale_t opt)
     return true;
 }
 
+bool PixelHarness::check_downscaleluma_t(downscaleluma_t ref, downscaleluma_t opt)
+{
+    ALIGN_VAR_16(pixel, ref_destf[32 * 32]);
+    ALIGN_VAR_16(pixel, opt_destf[32 * 32]);
+
+    intptr_t src_stride = 64;
+    intptr_t dst_stride = 32;
+    int bx = 32;
+    int by = 32;
+    int j = 0;
+    for (int i = 0; i < ITERS; i++)
+    {
+        int index = i % TEST_CASES;
+        ref(pixel_test_buff[index] + j, ref_destf, src_stride, dst_stride, bx, by);
+        checked(opt, pixel_test_buff[index] + j, opt_destf, src_stride, dst_stride, bx, by);
+
+        if (memcmp(ref_destf, opt_destf, 32 * 32 * sizeof(pixel)))
+            return false;
+
+        reportfail();
+        j += INCR;
+    }
+
+    return true;
+}
+
 bool PixelHarness::check_cpy2Dto1D_shl_t(cpy2Dto1D_shl_t ref, cpy2Dto1D_shl_t opt)
 {
     ALIGN_VAR_16(int16_t, ref_dest[64 * 64]);
@@ -1347,8 +1373,7 @@ bool PixelHarness::check_saoCuStatsE1_t(saoCuStatsE1_t ref, saoCuStatsE1_t opt)
         ref(sbuf2 + 1, pbuf3 + 1, stride, upBuff1_ref, endX, endY, stats_ref, count_ref);
         checked(opt, sbuf2 + 1, pbuf3 + 1, stride, upBuff1_vec, endX, endY, stats_vec, count_vec);
 
-        if (   memcmp(_upBuff1_ref, _upBuff1_vec, sizeof(_upBuff1_ref))
-            || memcmp(stats_ref, stats_vec, sizeof(stats_ref))
+        if (   memcmp(stats_ref, stats_vec, sizeof(stats_ref))
             || memcmp(count_ref, count_vec, sizeof(count_ref)))
             return false;
 
@@ -1399,10 +1424,7 @@ bool PixelHarness::check_saoCuStatsE2_t(saoCuStatsE2_t ref, saoCuStatsE2_t opt)
         ref(sbuf2 + 1, pbuf3 + 1, stride, upBuff1_ref, upBufft_ref, endX, endY, stats_ref, count_ref);
         checked(opt, sbuf2 + 1, pbuf3 + 1, stride, upBuff1_vec, upBufft_vec, endX, endY, stats_vec, count_vec);
 
-        // TODO: don't check upBuff*, the latest output pixels different, and can move into stack temporary buffer in future
-        if (   memcmp(_upBuff1_ref, _upBuff1_vec, sizeof(_upBuff1_ref))
-            || memcmp(_upBufft_ref, _upBufft_vec, sizeof(_upBufft_ref))
-            || memcmp(stats_ref, stats_vec, sizeof(stats_ref))
+        if (   memcmp(stats_ref, stats_vec, sizeof(stats_ref))
             || memcmp(count_ref, count_vec, sizeof(count_ref)))
             return false;
 
@@ -1450,8 +1472,7 @@ bool PixelHarness::check_saoCuStatsE3_t(saoCuStatsE3_t ref, saoCuStatsE3_t opt)
         ref(sbuf2, pbuf3, stride, upBuff1_ref, endX, endY, stats_ref, count_ref);
         checked(opt, sbuf2, pbuf3, stride, upBuff1_vec, endX, endY, stats_vec, count_vec);
 
-        if (   memcmp(_upBuff1_ref, _upBuff1_vec, sizeof(_upBuff1_ref))
-            || memcmp(stats_ref, stats_vec, sizeof(stats_ref))
+        if (   memcmp(stats_ref, stats_vec, sizeof(stats_ref))
             || memcmp(count_ref, count_vec, sizeof(count_ref)))
             return false;
 
@@ -2793,6 +2814,15 @@ bool PixelHarness::testCorrectness(const EncoderPrimitives& ref, const EncoderPr
         }
     }
 
+    if (opt.frameSubSampleLuma)
+    {
+        if (!check_downscaleluma_t(ref.frameSubSampleLuma, opt.frameSubSampleLuma))
+        {
+            printf("SubSample Luma failed!\n");
+            return false;
+        }
+    }
+
     if (opt.scale1D_128to64[NONALIGNED])
     {
         if (!check_scale1D_pp(ref.scale1D_128to64[NONALIGNED], opt.scale1D_128to64[NONALIGNED]))
@@ -3173,7 +3203,7 @@ void PixelHarness::measurePartition(int part, const EncoderPrimitives& ref, cons
     ALIGN_VAR_16(int, cres[16]);
     pixel *fref = pbuf2 + 2 * INCR;
     char header[128];
-#define HEADER(str, ...) sprintf(header, str, __VA_ARGS__); printf("%22s", header);
+#define HEADER(str, ...) snprintf(header, sizeof(header), str, __VA_ARGS__); printf("%22s", header);
 
     if (opt.pu[part].satd)
     {
@@ -3345,7 +3375,7 @@ void PixelHarness::measureSpeed(const EncoderPrimitives& ref, const EncoderPrimi
 {
     char header[128];
 
-#define HEADER(str, ...) sprintf(header, str, __VA_ARGS__); printf("%22s", header);
+#define HEADER(str, ...) snprintf(header, sizeof(header), str, __VA_ARGS__); printf("%22s", header);
 #define HEADER0(str) printf("%22s", str);
 
     for (int size = 4; size <= 64; size *= 2)
@@ -3490,6 +3520,12 @@ void PixelHarness::measureSpeed(const EncoderPrimitives& ref, const EncoderPrimi
     {
         HEADER0("downscale");
         REPORT_SPEEDUP(opt.frameInitLowres, ref.frameInitLowres, pbuf2, pbuf1, pbuf2, pbuf3, pbuf4, 64, 64, 64, 64);
+    }
+
+    if (opt.frameSubSampleLuma)
+    {
+        HEADER0("downscaleluma");
+        REPORT_SPEEDUP(opt.frameSubSampleLuma, ref.frameSubSampleLuma, pbuf2, pbuf1, 64, 64, 64, 64);
     }
 
     if (opt.scale1D_128to64[NONALIGNED])
