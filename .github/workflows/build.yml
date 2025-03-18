@@ -22,6 +22,7 @@ jobs:
           - haswell
           - skylake
           - alderlake
+          - raptorlake
           - bdver4
           - znver1
           - znver2
@@ -178,6 +179,7 @@ jobs:
           - haswell
           - skylake
           - alderlake
+          - raptorlake
           - bdver4
           - znver1
           - znver2
