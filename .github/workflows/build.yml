@@ -95,9 +95,10 @@ jobs:
       working-directory: ffmpeg
     - name: Compile mimalloc
       run: |
+        # fix build
+        sed -i 's/#if (defined(__GNUC__) || (defined(__clang__) && !defined(_MSC_VER)))  \/\/ exclude clang-cl, see issue #631/#if 0/' src/alloc.c 
         mkdir build
         cd build
-        # our fork only supports static linking.
         cmake -GNinja .. -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_POLICY_DEFAULT_CMP0069=NEW -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_STATIC=ON -DMI_BUILD_OBJECT=OFF -DMI_BUILD_TESTS=OFF
         ninja
       working-directory: mimalloc
@@ -105,6 +106,9 @@ jobs:
     - name: Install mimalloc
       run: ninja install
       working-directory: mimalloc/build
+    - name: Fix mimalloc static lib path
+      run: |
+        ln -sf $(find /usr/local/lib -maxdepth 1 -type d -name "mimalloc-*" | head -n1)/libmimalloc.a /usr/local/lib/libmimalloc-static.a
     - name: Setup build dir
       run: mkdir -p build/8b build/10b build/12b
     - name: Download profdata
@@ -229,7 +233,6 @@ jobs:
     - name: Compile mimalloc
       run: |
         mkdir -p build && cd build
-        # our fork only supports static linking.
         cmake -GNinja .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_POLICY_DEFAULT_CMP0069=NEW -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_STATIC=ON -DMI_BUILD_OBJECT=OFF -DMI_BUILD_TESTS=OFF
         ninja
       working-directory: mimalloc
