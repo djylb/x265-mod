@@ -942,8 +942,8 @@ namespace X265_NS {
                     if (!this->zoneFile)
                         x265_log_file(param, X265_LOG_ERROR, "%s zone file not found or error in opening zone file\n", optarg);
                 }
-                OPT("no-zonefile-rc-init") this->param->bNoResetZoneConfig = true;
                 OPT("vf") this->vf = optarg;
+                OPT("no-zonefile-rc-init") this->param->bNoResetZoneConfig = true;
                 OPT("fullhelp")
                 {
                     param->logLevel = X265_LOG_FULL;
@@ -1044,7 +1044,6 @@ namespace X265_NS {
             info[i].sarWidth = param->vui.sarWidth;
             info[i].sarHeight = param->vui.sarHeight;
             info[i].skipFrames = seek;
-            info[i].encodeToFrame = this->framesToBeEncoded;
             info[i].frameCount = 0;
             getParamAspectRatio(param, info[i].sarWidth, info[i].sarHeight);
 
@@ -1060,13 +1059,13 @@ namespace X265_NS {
                 x265_log(param, X265_LOG_ERROR, "Input bit depth (%d) must be between 8 and 16\n", inputBitDepth);
                 return true;
             }
+        }
 
-            if (this->vf)
-            {
-                bool bFail = Filter::parseFilterString(this->vf, &this->filters);
-                if (bFail)
-                    return true;
-            }
+        if (this->vf)
+        {
+            bool bFail = Filter::parseFilterString(this->vf, &this->filters);
+            if (bFail)
+                return true;
         }
 
             //TODO:Validate info params of both the views to equal values
