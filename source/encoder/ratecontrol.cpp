@@ -2974,6 +2974,7 @@ int RateControl::rowVbvRateControl(Frame* curFrame, uint32_t row, RateControlEnt
 double RateControl::getQScale(RateControlEntry *rce, double rateFactor)
 {
     double q;
+
     if (m_param->rc.qScaleMode == 3 || m_param->rc.qScaleMode == 4)
     {
         // Scale and units are obtained from rateNum and rateDenom for videos with fixed frame rates.
