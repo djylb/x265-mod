@@ -87,7 +87,7 @@ jobs:
           mingw-w64-${{matrix.toolchain}}-x86_64-ninja
     - name: Compile FFmpeg
       run: |
-        ./configure --enable-gpl --enable-version3 --disable-runtime-cpudetect --disable-all --disable-autodetect --enable-avformat --enable-avcodec --enable-avformat --disable-everything --disable-network --enable-demuxer=mpegts,mov,matroska,h264,hevc --enable-decoder=h264,hevc,ffv1,ffvhuff,huffyuv --enable-protocol=file,pipe --cc=cc --cxx=c++ --cpu=${{matrix.target_cpu}}
+        ./configure --enable-gpl --enable-version3 --disable-runtime-cpudetect --disable-all --disable-autodetect --enable-avformat --enable-avcodec --enable-avformat --disable-everything --disable-network --enable-demuxer=mpegts,mov,matroska,h264,hevc --enable-decoder=h264,hevc,ffv1,ffvhuff,huffyuv --enable-protocol=file,pipe --cc=cc --cxx=c++ --cpu=${{matrix.target_cpu}} --enable-cross-compile
         make -j`nproc`
       working-directory: ffmpeg
       if: steps.cache-ff.outputs.cache-hit != 'true'
