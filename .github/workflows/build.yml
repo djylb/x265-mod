@@ -23,11 +23,13 @@ jobs:
           - skylake
           - alderlake
           - raptorlake
+          - arrowlake
           - bdver4
           - znver1
           - znver2
           - znver3
           - znver4
+          - znver5
         toolchain:
           - clang
           #- ucrt
@@ -180,11 +182,13 @@ jobs:
           - skylake
           - alderlake
           - raptorlake
+          - arrowlake
           - bdver4
           - znver1
           - znver2
           - znver3
           - znver4
+          - znver5
         toolchain:
           - clang
     steps:

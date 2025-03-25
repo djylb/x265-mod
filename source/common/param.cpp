@@ -2434,7 +2434,7 @@ char *x265_param2string(x265_param* p, int padx, int pady)
     s += snprintf(s, bufSize - (s - buf), " gop-lookahead=%d", p->gopLookahead);
 
     s += snprintf(s, bufSize - (s - buf), " scenecut=%d", p->scenecutThreshold);
-    BOOL(p->bHistBasedSceneCut, "hist-scenecut");
+    s += snprintf(s, bufSize - (s - buf), " hist-scenecut=%d", p->bHistBasedSceneCut);
     s += snprintf(s, bufSize - (s - buf), " radl=%d", p->radl);
 
     s += snprintf(s, bufSize - (s - buf), " max-cu-size=%d", p->maxCUSize);
