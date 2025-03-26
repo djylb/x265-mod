@@ -22,11 +22,14 @@ jobs:
           - haswell
           - skylake
           - alderlake
+          - raptorlake
+          - arrowlake
           - bdver4
           - znver1
           - znver2
           - znver3
           - znver4
+          - znver5
         toolchain:
           - clang
           #- ucrt
@@ -55,7 +58,7 @@ jobs:
       with:
         path: ffmpeg
         repository: FFmpeg/FFmpeg
-        ref: n7.1
+        ref: master
       if: steps.cache-ff.outputs.cache-hit != 'true'
     - name: Cache mimalloc
       id: cache-mi
@@ -178,6 +181,7 @@ jobs:
           - haswell
           - skylake
           - alderlake
+          - raptorlake
           - bdver4
           - znver1
           - znver2
@@ -202,7 +206,7 @@ jobs:
       with:
         path: ffmpeg
         repository: FFmpeg/FFmpeg
-        ref: n7.1
+        ref: master
       if: steps.cache-ff.outputs.cache-hit != 'true'
     - name: Cache mimalloc
       id: cache-mi
@@ -220,7 +224,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake ninja-build nasm p7zip-full wget
+        sudo apt-get install -y build-essential cmake ninja-build nasm wget
     - name: Compile FFmpeg
       run: |
         ./configure --enable-gpl --enable-version3 --disable-runtime-cpudetect --disable-all --disable-autodetect --enable-avformat --enable-avcodec --enable-avformat --disable-everything --disable-network --enable-demuxer=mpegts,mov,matroska,h264,hevc --enable-decoder=h264,hevc,ffv1,ffvhuff,huffyuv --enable-protocol=file,pipe --cc=clang --cxx=clang++ --cpu=${{matrix.target_cpu}}

@@ -347,6 +347,9 @@ void x265_param_default(x265_param* param)
     param->reconfigWindowSize = 0;
     param->decoderVbvMaxRate = 0;
     param->bliveVBV2pass = 0;
+    param->rc.cuTreeStrength = (param->rc.hevcAq ? 6.0 : 5.0) * (1.0 - param->rc.qCompress);
+    param->rc.cuTreeMinQpOffset = -QP_MAX_MAX;
+    param->rc.cuTreeMaxQpOffset = QP_MAX_MAX;
 
     /* Video Usability Information (VUI) */
     param->vui.aspectRatioIdc = 0;
@@ -2064,7 +2067,7 @@ int x265_check_params(x265_param* param)
             CHECK(param->hmeRange[level] < 0 || param->hmeRange[level] >= 32768,
                 "Search Range for HME levels must be between 0 and 32768");
     }
-#if !X86_64
+#if !X86_64 && !X265_ARCH_ARM64
     CHECK(param->searchMethod == X265_SEA && (param->sourceWidth > 840 || param->sourceHeight > 480),
         "SEA motion search does not support resolutions greater than 480p in 32 bit build");
 #endif
@@ -2431,7 +2434,7 @@ char *x265_param2string(x265_param* p, int padx, int pady)
     s += snprintf(s, bufSize - (s - buf), " gop-lookahead=%d", p->gopLookahead);
 
     s += snprintf(s, bufSize - (s - buf), " scenecut=%d", p->scenecutThreshold);
-    BOOL(p->bHistBasedSceneCut, "hist-scenecut");
+    s += snprintf(s, bufSize - (s - buf), " hist-scenecut=%d", p->bHistBasedSceneCut);
     s += snprintf(s, bufSize - (s - buf), " radl=%d", p->radl);
 
     s += snprintf(s, bufSize - (s - buf), " max-cu-size=%d", p->maxCUSize);

@@ -6,7 +6,7 @@ set(MOD_BUILD Kyouko)
 set(X265_BASE_BRANCH "Yuuki")
 
 execute_process(COMMAND
-    ${GIT_EXECUTABLE} describe --tags --first-parent --match=[0-9].[0-9]* HEAD
+    ${GIT_EXECUTABLE} describe --tags --match=[0-9].[0-9]* HEAD
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         OUTPUT_VARIABLE X265_HEAD_TAG
         ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE

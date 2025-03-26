@@ -602,6 +602,7 @@ ret:
 #endif
             memcpy(&m_parent->m_param[m_id], m_param, sizeof(x265_param));
             /* This allows muxers to modify bitstream format */
+            m_cliopt.output->setParam(m_param);
             const x265_api* api = m_cliopt.api;
             ReconPlay* reconPlay = NULL;
             if (m_cliopt.reconPlayCmd)
@@ -1174,7 +1175,6 @@ ret:
         m_id = id;
         for (int view = 0; view < MAX_VIEWS; view++)
             m_input[view] = parentEnc->m_input[view];
-        m_cliopt = &parentEnc->m_cliopt;
     }
 
     void Reader::threadMain()

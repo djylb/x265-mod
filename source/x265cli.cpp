@@ -551,7 +551,7 @@ namespace X265_NS {
 
         if (param->pgfn && frameNum && !(prevUpdateTimeFile && time - prevUpdateTimeFile < UPDATE_INTERVAL_FILE)) {
             // Update progress file
-            sprintf(buf,
+            snprintf(buf, sizeof(buf),
                 "{\n \"current_frame\": %u,\n \"total_frames\": %u,\n \"current_size\": %" PRIu64 ",\n \"elapsed\": %" PRIu64 "\n}",
                 frameNum, framesToBeEncoded, totalbytes, elapsed
             );
@@ -605,7 +605,7 @@ namespace X265_NS {
             int secs = elapsed / 1000000;
             if (framesToBeEncoded)
             {
-                sprintf(buf_stylish, "x265 [%5.1f%%]  %6d/%-6d  %5.*f  %6.*f  %3d:%02d:%02d  %3d:%02d:%02d  %6.*f %1sB  %6.*f %1sB",
+                snprintf(buf_stylish, sizeof(buf_stylish), "x265 [%5.1f%%]  %6d/%-6d  %5.*f  %6.*f  %3d:%02d:%02d  %3d:%02d:%02d  %6.*f %1sB  %6.*f %1sB",
                         percentage, frameNum, framesToBeEncoded, fps_prec, fps, bitrate_prec, bitrate,
                         secs/3600, (secs/60)%60, secs%60, eta_hh, eta_mm, eta_ss,
                         file_prec, file_num, file_unit,
@@ -613,7 +613,7 @@ namespace X265_NS {
             }
             else
             {
-                sprintf(buf_stylish, "x265 %6d  %5.*f  %6.*f  %3d:%02d:%02d  %6.*f %1sB",
+                snprintf(buf_stylish, sizeof(buf_stylish), "x265 %6d  %5.*f  %6.*f  %3d:%02d:%02d  %6.*f %1sB",
                         frameNum, fps_prec, fps, bitrate_prec, bitrate,
                         secs/3600, (secs/60)%60, secs%60,
                         file_prec, file_num, file_unit);
@@ -736,12 +736,6 @@ namespace X265_NS {
 
     bool CLIOptions::parse(int argc, char **argv)
     {
-        if (argc <= 1)
-        {
-            x265_log(NULL, X265_LOG_ERROR, "No input file. Run x265 --help for a list of options.\n");
-            return true;
-        }
-
         bool bError = false;
         int bShowHelp = false;
         int inputBitDepth = 8;
@@ -760,6 +754,12 @@ namespace X265_NS {
         const char *profile = NULL;
         int svtEnabled = 0;
         argCnt = argc;
+
+        if (argc <= 1)
+        {
+            x265_log(NULL, X265_LOG_ERROR, "No input file. Run x265 --help for a list of options.\n");
+            return true;
+        }
 
         /* Presets are applied before all other options. */
         for (optind = 0;;)
@@ -942,8 +942,8 @@ namespace X265_NS {
                     if (!this->zoneFile)
                         x265_log_file(param, X265_LOG_ERROR, "%s zone file not found or error in opening zone file\n", optarg);
                 }
-                OPT("no-zonefile-rc-init") this->param->bNoResetZoneConfig = true;
                 OPT("vf") this->vf = optarg;
+                OPT("no-zonefile-rc-init") this->param->bNoResetZoneConfig = true;
                 OPT("fullhelp")
                 {
                     param->logLevel = X265_LOG_FULL;
@@ -1060,13 +1060,13 @@ namespace X265_NS {
                 x265_log(param, X265_LOG_ERROR, "Input bit depth (%d) must be between 8 and 16\n", inputBitDepth);
                 return true;
             }
+        }
 
-            if (this->vf)
-            {
-                bool bFail = Filter::parseFilterString(this->vf, &this->filters);
-                if (bFail)
-                    return true;
-            }
+        if (this->vf)
+        {
+            bool bFail = Filter::parseFilterString(this->vf, &this->filters);
+            if (bFail)
+                return true;
         }
 
             //TODO:Validate info params of both the views to equal values

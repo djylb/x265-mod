@@ -35,6 +35,7 @@ extern "C" {
 #if _MSC_VER
 #pragma warning(disable: 4201) // non-standard extension used (nameless struct/union)
 #endif
+
 #define X265_MAX_STRING_SIZE    (256)
 
 /* x265_encoder:
@@ -413,6 +414,7 @@ typedef struct x265_picture
     int64_t dts;
 
     int vbvEndFlag; // New flag for VBV end feature
+
     /* force quantizer for != X265_QP_AUTO */
     /* The value provided on input is returned with the same picture (POC) on
      * output */
@@ -497,6 +499,7 @@ typedef struct x265_picture
     uint32_t picStruct;
 
     int    width;
+
     int   layerID;
     int    format;
 } x265_picture;
@@ -1317,6 +1320,8 @@ typedef struct x265_param
      * generally has better compression efficiency and negligible encoder
      * performance impact, but the use case may preclude it.  Default true */
     int       bOpenGOP;
+
+	/*Force nal type to CRA to all frames expect first frame. Default disabled*/
 	int       craNal;
 
     /* Scene cuts closer together than this are coded as I, not IDR. */
@@ -1814,10 +1819,10 @@ typedef struct x265_param
         double    rfConstantMin;
 
         /* Multi-pass encoding */
-        /* Enable writing the stats in a multi-pass encode to the stat output file */
+        /* Enable writing the stats in a multi-pass encode to the stat output file/memory */
         int       bStatWrite;
 
-        /* Enable loading data from the stat input file in a multi pass encode */
+        /* Enable loading data from the stat input file/memory in a multi pass encode */
         int       bStatRead;
 
         /* Filename of the 2pass output/input stats file, if unspecified the
@@ -2560,7 +2565,11 @@ int x265_encoder_headers(x265_encoder *, x265_nal **pp_nal, uint32_t *pi_nal);
  *      the payloads of all output NALs are guaranteed to be sequential in memory.
  *      To flush the encoder and retrieve delayed output pictures, pass pic_in as NULL.
  *      Once flushing has begun, all subsequent calls must pass pic_in as NULL. */
-int x265_encoder_encode(x265_encoder *encoder, x265_nal **pp_nal, uint32_t *pi_nal, x265_picture *pic_in, x265_picture *pic_out);
+int x265_encoder_encode(x265_encoder* encoder, x265_nal** pp_nal, uint32_t* pi_nal, x265_picture* pic_in, x265_picture* pic_out);
+
+/* x265_configure_vbv_end:
+*       Set the Vbvend flag based on the totalstreamduration.
+*/
 void x265_configure_vbv_end(x265_encoder* enc, x265_picture* picture, double totalstreamduration);
 
 /* x265_encoder_reconfig:
