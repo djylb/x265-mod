@@ -71,7 +71,7 @@ jobs:
       with:
         path: mimalloc
         repository: microsoft/mimalloc
-        ref: master
+        ref: main
       if: steps.cache-mi.outputs.cache-hit != 'true'
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
@@ -219,7 +219,7 @@ jobs:
       with:
         path: mimalloc
         repository: microsoft/mimalloc
-        ref: master
+        ref: main
       if: steps.cache-mi.outputs.cache-hit != 'true'
     - name: Install Dependencies
       run: |
