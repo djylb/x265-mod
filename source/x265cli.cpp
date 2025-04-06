@@ -300,12 +300,12 @@ namespace X265_NS {
             "                                    - 1 : Store/Load ctu distortion to/from the file specified in analysis-save/load.\n"
             "                                Default 0 - Disabled\n");
         H0("   --aq-mode <integer>           Mode for Adaptive Quantization\n"
-           "                                     - 0 : none\n"
-           "                                     - 1 : uniform AQ\n"
-           "                                     - 2 : auto variance\n"
-           "                                     - 3 : variance with bias to dark scenes\n"
-           "                                     - 4 : auto variance with edge information\n"
-           "                                     - 5 : auto variance with edge information and bias to dark scenes.\n"
+           "                                   - 0:none\n"
+           "                                   - 1:uniform AQ\n"
+           "                                   - 2:auto variance\n"
+           "                                   - 3:auto variance with bias to dark scenes\n"
+           "                                   - 4:auto variance with edge information.\n"
+           "                                   - 5:auto variance with edge information and bias to dark scenes.\n"
            "                                 Default %d\n", param->rc.aqMode);
         H0("   --[no-]limit-aq1              Use QP offset determined by aq-mode 1 (uniform AQ) as hard upper limit on QP offset allowed in aq-mode 2-5. This (might) help in scenes with large complexity differences among blocks. Default is %s\n", OPT(param->rc.limitAq1));
         H0("   --[no-]hevc-aq                Mode for HEVC Adaptive Quantization. Default %s\n", OPT(param->rc.hevcAq));
@@ -416,13 +416,13 @@ namespace X265_NS {
         H0("   --[no-]idr-recovery-sei       Emit recovery point infor SEI at each IDR frame \n");
         H0("   --temporal-layers             Enable a temporal sublayer for unreferenced B frames. Default %s\n", OPT(param->bEnableTemporalSubLayers));
         H0("   --[no-]aud                    Emit access unit delimiters at the start of each access unit. Default %s\n", OPT(param->bEnableAccessUnitDelimiters));
+        H0("   --[no-]eob                    Emit end of bitstream nal unit at the end of the bitstream. Default %s\n", OPT(param->bEnableEndOfBitstream));
+        H0("   --[no-]eos                    Emit end of sequence nal unit at the end of every coded video sequence. Default %s\n", OPT(param->bEnableEndOfSequence));
         H1("   --opts <integer>              Set level of writing options in SEI [%d]\n"
            "                                     - 0: no information will be written in SEI\n"
            "                                     - 1: write x265 information\n"
            "                                     - 2: write x265 options\n"
            "                                     - 3: write x265 information and options\n", param->opts);
-        H0("   --[no-]eob                    Emit end of bitstream nal unit at the end of the bitstream. Default %s\n", OPT(param->bEnableEndOfBitstream));
-        H0("   --[no-]eos                    Emit end of sequence nal unit at the end of every coded video sequence. Default %s\n", OPT(param->bEnableEndOfSequence));
         H1("   --hash <integer>              Decoded Picture Hash SEI 0: disabled, 1: MD5, 2: CRC, 3: Checksum. Default %d\n", param->decodedPictureHashSEI);
         H0("   --atc-sei <integer>           Emit the alternative transfer characteristics SEI message where the integer is the preferred transfer characteristic. Default disabled\n");
         H0("   --pic-struct <integer>        Set the picture structure and emit it in the picture timing SEI message. Values in the range 0..12. See D.3.3 of the HEVC spec. for a detailed explanation.\n");

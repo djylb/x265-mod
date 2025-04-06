@@ -445,6 +445,7 @@ void x265_param_default(x265_param* param)
     param->svtHevcParam = svtParam;
     svt_param_default(param);
 #endif
+
     /* Film grain characteristics model filename */
     param->filmGrain = NULL;
     param->aomFilmGrain = NULL;
@@ -2343,8 +2344,8 @@ char *x265_param2string(x265_param* p, int padx, int pady)
 
     // Important parameters first
     s += snprintf(s, bufSize - (s - buf), " rc=%s", p->rc.rateControlMode == X265_RC_ABR ? (
-         p->rc.bitrate == p->rc.vbvMaxBitrate ? "cbr" : "abr")
-         : p->rc.rateControlMode == X265_RC_CRF ? "crf" : "cqp");
+             p->rc.bitrate == p->rc.vbvMaxBitrate ? "cbr" : "abr")
+             : p->rc.rateControlMode == X265_RC_CRF ? "crf" : "cqp");
     if (p->rc.rateControlMode == X265_RC_ABR || p->rc.rateControlMode == X265_RC_CRF)
     {
         if (p->rc.rateControlMode == X265_RC_CRF)
@@ -2356,13 +2357,13 @@ char *x265_param2string(x265_param* p, int padx, int pady)
         s += snprintf(s, bufSize - (s - buf), " stats-read=%d", p->rc.bStatRead);
         if (p->rc.bStatRead)
             s += snprintf(s, bufSize - (s - buf), " cplxblur=%.1f qblur=%.1f",
-            p->rc.complexityBlur, p->rc.qblur);
+                p->rc.complexityBlur, p->rc.qblur);
         if (p->rc.bStatWrite && !p->rc.bStatRead)
             BOOL(p->rc.bEnableSlowFirstPass, "slow-firstpass");
         if (p->rc.vbvBufferSize)
         {
             s += snprintf(s, bufSize - (s - buf), " vbv-maxrate=%d vbv-bufsize=%d vbv-init=%.1f min-vbv-fullness=%.1f max-vbv-fullness=%.1f",
-                p->rc.vbvMaxBitrate, p->rc.vbvBufferSize, p->rc.vbvBufferInit, p->minVbvFullness, p->maxVbvFullness);
+                    p->rc.vbvMaxBitrate, p->rc.vbvBufferSize, p->rc.vbvBufferInit, p->minVbvFullness, p->maxVbvFullness);
             if (p->vbvBufferEnd)
                 s += snprintf(s, bufSize - (s - buf), " vbv-end=%.1f vbv-end-fr-adj=%.1f", p->vbvBufferEnd, p->vbvEndFrameAdjust);
             if (p->rc.rateControlMode == X265_RC_CRF)

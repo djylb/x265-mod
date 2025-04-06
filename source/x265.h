@@ -2567,9 +2567,8 @@ int x265_encoder_headers(x265_encoder *, x265_nal **pp_nal, uint32_t *pi_nal);
  *      Once flushing has begun, all subsequent calls must pass pic_in as NULL. */
 int x265_encoder_encode(x265_encoder* encoder, x265_nal** pp_nal, uint32_t* pi_nal, x265_picture* pic_in, x265_picture* pic_out);
 
-/*
-x265_configure_vbv_end:
-* Set the Vbvend flag based on the totalstreamduration.
+/* x265_configure_vbv_end:
+*       Set the Vbvend flag based on the totalstreamduration.
 */
 void x265_configure_vbv_end(x265_encoder* enc, x265_picture* picture, double totalstreamduration);
 

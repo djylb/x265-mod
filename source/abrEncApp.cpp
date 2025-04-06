@@ -274,6 +274,7 @@ namespace X265_NS {
             }
         }
         m_cliopt.output->setParam(m_param);
+
         /* note: we could try to acquire a different libx265 API here based on
         * the profile found during option parsing, but it must be done before
         * opening an encoder */
@@ -603,7 +604,6 @@ ret:
             /* This allows muxers to modify bitstream format */
             m_cliopt.output->setParam(m_param);
             const x265_api* api = m_cliopt.api;
-            /* This allows muxers to modify bitstream format */
             ReconPlay* reconPlay = NULL;
             if (m_cliopt.reconPlayCmd)
                 reconPlay = new ReconPlay(m_cliopt.reconPlayCmd, *m_param);
@@ -963,10 +963,8 @@ ret:
             m_cliopt.output->closeFile(largest_pts, second_largest_pts);
 
             if (b_ctrl_c)
-            {
                 general_log(m_param, NULL, X265_LOG_INFO, "aborted at input frame %d, output frame %d in %s\n",
                     m_cliopt.seek + inFrameCount, stats.encodedPictureCount, profileName);
-            }
 
             api->param_free(m_param);
 
