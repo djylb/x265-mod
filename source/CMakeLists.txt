@@ -6,18 +6,14 @@ if(NOT CMAKE_BUILD_TYPE)
         FORCE)
 endif()
 message(STATUS "cmake version ${CMAKE_VERSION}")
-if(POLICY CMP0025)
-    cmake_policy(SET CMP0025 OLD) # report Apple's Clang as just Clang
-endif()
+
 if(POLICY CMP0042)
     cmake_policy(SET CMP0042 NEW) # MACOSX_RPATH
 endif()
-if(POLICY CMP0054)
-    cmake_policy(SET CMP0054 OLD) # Only interpret if() arguments as variables or keywords when unquoted
-endif()
+
 
 project (x265)
-cmake_minimum_required (VERSION 3.5) # OBJECT libraries require 2.8.8 and cmake require 3.5
+cmake_minimum_required (VERSION 2.8.8...3.10) # OBJECT libraries require 2.8.8
 include(CheckIncludeFiles)
 include(CheckFunctionExists)
 include(CheckSymbolExists)
@@ -186,7 +182,7 @@ if(APPLE)
   add_definitions(-DMACOS=1)
 endif()
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
     set(CLANG 1)
 endif()
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
@@ -340,6 +336,11 @@ if(GCC)
             string(APPEND CMAKE_REQUIRED_FLAGS " ${AARCH64_SVE_FLAG}")
             set(OLD_CMAKE_TRY_COMPILE_TARGET_TYPE ${CMAKE_TRY_COMPILE_TARGET_TYPE})
             set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+            # When compilation target is a STATIC_LIBRARY, the LINK_OPTIONS are
+            # passed to the archiver, so we must backup, clear and restore these.
+            # https://gitlab.kitware.com/cmake/cmake/-/issues/23454
+            set(OLD_CMAKE_REQUIRED_LINK_OPTIONS ${CMAKE_REQUIRED_LINK_OPTIONS})
+            set(CMAKE_REQUIRED_LINK_OPTIONS "")
 
             # Check whether the compiler can compile SVE functions that require
             # backup/restore of SVE registers according to AAPCS.
@@ -369,6 +370,7 @@ int main() { return 0; }")
 
             set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
             set(CMAKE_TRY_COMPILE_TARGET_TYPE ${OLD_CMAKE_TRY_COMPILE_TARGET_TYPE})
+            set(CMAKE_REQUIRED_LINK_OPTIONS ${OLD_CMAKE_REQUIRED_LINK_OPTIONS})
             if (SVE_COMPILATION_C_TEST_COMPILED AND SVE_COMPILATION_CXX_TEST_COMPILED)
                 if (SVE_HEADER_C_TEST_COMPILED AND SVE_HEADER_CXX_TEST_COMPILED)
                     add_definitions(-DHAVE_SVE_BRIDGE=1)
